@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(_request: Request, { params }: { params: { id: string } }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   const quiz = await prisma.quizSession.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       certification: { select: { name: true, examCode: true, slug: true } },
       questions: {

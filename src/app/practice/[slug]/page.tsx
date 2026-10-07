@@ -7,13 +7,15 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const certification = await prisma.certification.findUnique({ where: { slug: params.slug }, select: { name: true, examCode: true } });
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const certification = await prisma.certification.findUnique({ where: { slug }, select: { name: true, examCode: true } });
   return { title: certification ? `Practice ${certification.name} ${certification.examCode}` : "Practice" };
 }
 
-export default async function PracticePage({ params }: { params: { slug: string } }) {
-  const certification = await prisma.certification.findUnique({ where: { slug: params.slug }, include: { domains: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, objective: true } } } });
+export default async function PracticePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const certification = await prisma.certification.findUnique({ where: { slug }, include: { domains: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, objective: true } } } });
   if (!certification) notFound();
   const questionCount = await prisma.question.count({ where: { domain: { certificationId: certification.id } } });
   return <main className="main-content inner-page practice-page">
