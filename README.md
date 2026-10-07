@@ -24,7 +24,7 @@ npm run db:setup
 npm run dev
 ```
 
-Visit `http://localhost:3000`. The idempotent seed contains three certifications, objective-aligned domains, and nine original sample questions. Add your own question content before treating the question bank as a complete exam simulator.
+Visit `http://localhost:3000`. The idempotent seed contains three certifications, objective-aligned domains, and 150 original sample questions (50 per certification). Add your own question content before treating the question bank as a complete exam simulator.
 
 ## Authentication
 
@@ -60,7 +60,7 @@ Use a separate Neon database for preview deployments. Do not commit database cre
 - `npm run cf:build` creates the Cloudflare Workers build.
 - `npm run cf:preview` builds and previews the app in the Workers runtime.
 - `npm run cf:deploy` builds and deploys the Worker.
-- `npm run db:generate` generates Prisma Client.
+- `npm run db:generate` generates Prisma Client for local SQLite. Run it after any `cf:*` script, which switches the generated client to PostgreSQL.
 - `npm run db:push` applies the schema to the configured development database.
 - `npm run db:seed` loads or refreshes the sample content.
 - `npm run db:setup` applies the schema and seeds it.
