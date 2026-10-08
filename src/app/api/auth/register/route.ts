@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
+// Kept low so hashing fits the Cloudflare Workers Free CPU limit (~10 ms per request). Raise to 12 on a paid plan.
+const PASSWORD_HASH_COST = 6;
+
 const registrationSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
@@ -23,7 +26,7 @@ export async function POST(request: Request) {
     data: {
       name: parsed.data.name,
       email: parsed.data.email,
-      passwordHash: await hash(parsed.data.password, 12),
+      passwordHash: await hash(parsed.data.password, PASSWORD_HASH_COST),
     },
     select: { id: true, name: true, email: true },
   });
