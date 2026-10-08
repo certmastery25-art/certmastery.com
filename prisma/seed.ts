@@ -1,6 +1,7 @@
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, Difficulty } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }) });
 
 const certifications = [
   {

@@ -6,10 +6,8 @@ const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 const requestClients = new WeakMap<object, PrismaClient>();
 
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL ?? "";
   return new PrismaClient({
-    // PostgreSQL goes through the Neon driver adapter; local SQLite uses Prisma's built-in engine.
-    ...(url.startsWith("postgres") ? { adapter: new PrismaNeon({ connectionString: url }) } : {}),
+    adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 }
