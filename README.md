@@ -26,7 +26,7 @@ npm run db:setup
 npm run dev
 ```
 
-Visit `http://localhost:3000`. The idempotent seed contains three certifications, objective-aligned domains, and 150 original sample questions (50 per certification). Add your own question content before treating the question bank as a complete exam simulator.
+Visit `http://localhost:3000`. The idempotent seed contains three certifications, objective-aligned domains, and 600 original sample questions (200 per certification, distributed across domains by each exam's published objective weighting). The questions live in `prisma/seed.ts` and `prisma/questions/`. Add your own question content before treating the question bank as a complete exam simulator.
 
 ## Authentication
 

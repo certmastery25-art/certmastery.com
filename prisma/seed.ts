@@ -1,5 +1,9 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, Difficulty } from "@prisma/client";
+import { ccnaQuestions } from "./questions/ccna";
+import { securityPlusQuestions } from "./questions/security-plus";
+import { serverPlusQuestions } from "./questions/server-plus";
+import type { AdditionalQuestion } from "./questions/types";
 
 const prisma = new PrismaClient({ adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }) });
 
@@ -108,8 +112,6 @@ const questions = [
   },
 ];
 
-type AdditionalQuestion = [string, Difficulty, string, string, string, string, string, string];
-
 function buildAdditionalQuestions(prefix: string, certification: string, entries: AdditionalQuestion[]) {
   return entries.map(([domain, difficulty, prompt, correct, distractorOne, distractorTwo, distractorThree, explanation], index) => {
     const correctIndex = index % 4;
@@ -178,6 +180,7 @@ const additionalQuestions = [
     ["Security Program Management", Difficulty.EASY, "Which document defines the order and strategy for restoring IT services after a major disruption?", "Disaster recovery plan", "Password policy", "Code style guide", "Procurement catalog", "A disaster recovery plan coordinates technical recovery activities and priorities after a disruptive event."],
     ["Security Program Management", Difficulty.MEDIUM, "What is the purpose of security awareness training?", "Reduce unsafe user behavior and improve recognition of threats", "Guarantee that malware cannot run", "Replace access control systems", "Eliminate the need for policies", "Training helps users recognize social engineering, report issues, and follow required security practices."],
     ["Security Program Management", Difficulty.HARD, "Which activity best validates that an incident response plan works under realistic conditions?", "A documented tabletop or technical exercise with follow-up actions", "Reading the plan once without recording findings", "Deleting old incident records", "Waiting for a real breach to reveal gaps", "Exercises test roles, communications, dependencies, and decision points before a real incident, and the findings should become tracked improvements."],
+    ...securityPlusQuestions,
   ]),
   ...buildAdditionalQuestions("srv", "server-plus", [
     ["Server Hardware Installation & Management", Difficulty.EASY, "Which component temporarily stores data and instructions actively used by a server?", "RAM", "Power supply", "Rack rail", "Chassis fan", "RAM provides fast volatile working storage for active processes."],
@@ -228,6 +231,7 @@ const additionalQuestions = [
     ["Troubleshooting", Difficulty.MEDIUM, "A server is slow immediately after a storage migration. Which comparison is most useful?", "Compare storage latency, queue depth, and throughput before and after migration", "Compare monitor resolution", "Compare user birthdays", "Compare keyboard layouts", "Before-and-after storage metrics help isolate whether the migration introduced latency or contention."],
     ["Troubleshooting", Difficulty.HARD, "What is the purpose of changing one variable at a time during troubleshooting?", "It makes the effect of each change observable", "It guarantees the first theory is correct", "It prevents documentation", "It increases the number of unknowns", "Controlled changes preserve cause-and-effect information and make rollback easier."],
     ["Troubleshooting", Difficulty.MEDIUM, "A server's network interface shows errors and dropped packets. What should be checked?", "Cabling, transceiver compatibility, speed, duplex, and switch port counters", "The backup retention label", "The CPU product name", "The office calendar", "Physical and link-layer issues commonly cause interface errors and drops, so both ends and their counters should be inspected."],
+    ...serverPlusQuestions,
   ]),
   ...buildAdditionalQuestions("ccna", "ccna", [
     ["Network Fundamentals", Difficulty.EASY, "Which OSI layer provides logical addressing and routing between networks?", "Network layer", "Physical layer", "Presentation layer", "Application layer", "The network layer provides logical addressing and path selection between networks."],
@@ -286,6 +290,7 @@ const additionalQuestions = [
     ["Automation & Programmability", Difficulty.MEDIUM, "What does a network controller commonly provide?", "Centralized policy and programmable management of network devices", "Physical cable termination", "A replacement for all endpoints", "A local disk partition", "Controllers centralize intent, policy, telemetry, and automation across network infrastructure."],
     ["Automation & Programmability", Difficulty.EASY, "Which format is designed to be human-readable and commonly used in configuration files?", "YAML", "MP3", "PNG", "EXE", "YAML is a human-readable data serialization format commonly used for configuration and automation."],
     ["Automation & Programmability", Difficulty.HARD, "Why should an automation script avoid embedding credentials directly in source code?", "Source code may be copied or exposed, causing credential compromise", "It makes scripts run faster", "It prevents JSON parsing", "It increases link bandwidth", "Secrets should be supplied through protected secret stores or environment mechanisms rather than committed to code."],
+    ...ccnaQuestions,
   ]),
 ];
 
@@ -311,11 +316,11 @@ async function main() {
     }
   }
 
-  for (const question of questions) {
+  const upsertQuestion = (question: (typeof questions)[number]) => {
     const domainId = domainIds.get(`${question.certification}:${question.domain}`);
     if (!domainId) throw new Error(`Missing domain for ${question.id}`);
 
-    await prisma.question.upsert({
+    return prisma.question.upsert({
       where: { id: question.id },
       update: {
         domainId, prompt: question.prompt, explanation: question.explanation, difficulty: question.difficulty,
@@ -326,21 +331,18 @@ async function main() {
         options: { create: [0, 1, 2, 3].map((index) => ({ label: question.options[index * 2], text: question.options[index * 2 + 1], isCorrect: question.options[index * 2] === question.correct })) },
       },
     });
+  };
+
+  // Each upsert is several round trips to Neon, so write the bank in parallel batches.
+  const batchSize = 10;
+  for (let start = 0; start < questions.length; start += batchSize) {
+    await Promise.all(questions.slice(start, start + batchSize).map(upsertQuestion));
   }
 
-  for (const certification of certifications) {
-    const seededQuestions = await prisma.question.findMany({
-      where: { domain: { certification: { slug: certification.slug } } },
-      orderBy: { id: "asc" },
-      select: { id: true },
-    });
-    const excessQuestionIds = seededQuestions.slice(50).map((question) => question.id);
-    if (excessQuestionIds.length) {
-      await prisma.question.deleteMany({ where: { id: { in: excessQuestionIds } } });
-    }
-  }
+  // Remove seed questions that are no longer in the bank; ids outside the seed naming scheme are left alone.
+  await prisma.question.deleteMany({ where: { id: { contains: "-q-", notIn: questions.map((question) => question.id) } } });
 
-  console.log(`Seeded ${certifications.length} certifications with 50 original questions each.`);
+  console.log(`Seeded ${certifications.length} certifications with ${questions.length} original questions.`);
 }
 
 main().finally(() => prisma.$disconnect());
