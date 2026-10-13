@@ -24,7 +24,7 @@ export function QuizSetupForm({
   domains,
   questionCount,
 }: {
-  certification: { slug: string; name: string; examCode: string };
+  certification: { slug: string; name: string; examCode: string; timedExamQuestions: number | null };
   domains: DomainOption[];
   questionCount: number;
 }) {
@@ -75,7 +75,10 @@ export function QuizSetupForm({
             { value: "TIMED", label: "Timed exam", detail: "Exam-day conditions", icon: Clock3 },
             { value: "CUSTOM", label: "Custom quiz", detail: "Your settings", icon: SlidersHorizontal },
           ] as const).map(({ value, label, detail, icon: Icon }) => (
-            <button key={value} className={`mode-option ${selectedMode === value ? "mode-option-selected" : ""}`} type="button" aria-pressed={selectedMode === value} onClick={() => setValue("mode", value)}>
+            <button key={value} className={`mode-option ${selectedMode === value ? "mode-option-selected" : ""}`} type="button" aria-pressed={selectedMode === value} onClick={() => {
+              setValue("mode", value);
+              if (value === "TIMED" && certification.timedExamQuestions) setValue("count", Math.min(certification.timedExamQuestions, questionCount));
+            }}>
               <span className="mode-icon"><Icon size={18} /></span>
               <span className="mode-copy"><strong>{label}</strong><small>{detail}</small></span>
               <span className="mode-radio" aria-hidden="true" />

@@ -23,7 +23,7 @@ export type AnswerState = {
 };
 
 type QuizSession = { id: string; startedAt: string; completedAt?: string | null };
-type CertificationInfo = { name: string; examCode: string; slug: string };
+type CertificationInfo = { name: string; examCode: string; slug: string; timedExamQuestions?: number | null; timedExamMinutes?: number | null };
 
 type QuizStore = {
   quiz: QuizSession | null;

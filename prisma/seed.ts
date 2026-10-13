@@ -3,6 +3,7 @@ import { PrismaClient, Difficulty } from "@prisma/client";
 import { ccnaQuestions } from "./questions/ccna";
 import { securityPlusQuestions } from "./questions/security-plus";
 import { serverPlusQuestions } from "./questions/server-plus";
+import { splunkCloudAdminQuestions } from "./questions/splunk-cloud-admin";
 import type { AdditionalQuestion } from "./questions/types";
 
 const prisma = new PrismaClient({ adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }) });
@@ -51,6 +52,31 @@ const certifications = [
       { name: "IP Services", objective: "4.0", sortOrder: 4 },
       { name: "Security Fundamentals", objective: "5.0", sortOrder: 5 },
       { name: "Automation & Programmability", objective: "6.0", sortOrder: 6 },
+    ],
+  },
+  {
+    slug: "splunk-cloud-admin",
+    acronym: "Splunk Cloud Admin",
+    name: "Splunk Cloud Certified Admin",
+    examCode: "SPLK-1005",
+    description: "Administer Splunk Cloud: get data in, tune parsing, manage indexes, forwarders, users and apps.",
+    color: "#7046a8",
+    timedExamQuestions: 60,
+    timedExamMinutes: 72,
+    domains: [
+      { name: "Splunk Cloud Overview", objective: "1.0", sortOrder: 1 },
+      { name: "Index Management", objective: "2.0", sortOrder: 2 },
+      { name: "User Authentication and Authorization", objective: "3.0", sortOrder: 3 },
+      { name: "Splunk Configuration Files", objective: "4.0", sortOrder: 4 },
+      { name: "Getting Data in Cloud", objective: "5.0", sortOrder: 5 },
+      { name: "Forwarder Management", objective: "6.0", sortOrder: 6 },
+      { name: "Monitor Inputs", objective: "7.0", sortOrder: 7 },
+      { name: "Network and Other Inputs", objective: "8.0", sortOrder: 8 },
+      { name: "Fine-tuning Inputs", objective: "9.0", sortOrder: 9 },
+      { name: "Parsing Phase and Data Preview", objective: "10.0", sortOrder: 10 },
+      { name: "Manipulating Raw Data", objective: "11.0", sortOrder: 11 },
+      { name: "Installing and Managing Apps", objective: "12.0", sortOrder: 12 },
+      { name: "Working with Splunk Cloud Support", objective: "13.0", sortOrder: 13 },
     ],
   },
 ];
@@ -112,14 +138,14 @@ const questions = [
   },
 ];
 
-function buildAdditionalQuestions(prefix: string, certification: string, entries: AdditionalQuestion[]) {
+function buildAdditionalQuestions(prefix: string, certification: string, entries: AdditionalQuestion[], firstNumber = 4) {
   return entries.map(([domain, difficulty, prompt, correct, distractorOne, distractorTwo, distractorThree, explanation], index) => {
     const correctIndex = index % 4;
     const choices = [correct, distractorOne, distractorTwo, distractorThree];
     const orderedChoices = choices.map((choice, choiceIndex) => choices[(choiceIndex - correctIndex + 4) % 4]);
     const correctLabel = ["A", "B", "C", "D"][correctIndex];
     return {
-      id: `${prefix}-q-${String(index + 4).padStart(2, "0")}`,
+      id: `${prefix}-q-${String(index + firstNumber).padStart(2, "0")}`,
       certification,
       domain,
       difficulty,
@@ -292,6 +318,7 @@ const additionalQuestions = [
     ["Automation & Programmability", Difficulty.HARD, "Why should an automation script avoid embedding credentials directly in source code?", "Source code may be copied or exposed, causing credential compromise", "It makes scripts run faster", "It prevents JSON parsing", "It increases link bandwidth", "Secrets should be supplied through protected secret stores or environment mechanisms rather than committed to code."],
     ...ccnaQuestions,
   ]),
+  ...buildAdditionalQuestions("splk", "splunk-cloud-admin", splunkCloudAdminQuestions, 1),
 ];
 
 questions.push(...additionalQuestions);
@@ -302,8 +329,8 @@ async function main() {
   for (const item of certifications) {
     const certification = await prisma.certification.upsert({
       where: { slug: item.slug },
-      update: { acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color },
-      create: { slug: item.slug, acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color },
+      update: { acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color, timedExamQuestions: item.timedExamQuestions, timedExamMinutes: item.timedExamMinutes },
+      create: { slug: item.slug, acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color, timedExamQuestions: item.timedExamQuestions, timedExamMinutes: item.timedExamMinutes },
     });
 
     for (const domain of item.domains) {

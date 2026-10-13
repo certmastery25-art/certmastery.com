@@ -9,7 +9,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const quiz = await prisma.quizSession.findUnique({
     where: { id },
     include: {
-      certification: { select: { name: true, examCode: true, slug: true } },
+      certification: { select: { name: true, examCode: true, slug: true, timedExamQuestions: true, timedExamMinutes: true } },
       questions: {
         orderBy: { sortOrder: "asc" },
         include: {

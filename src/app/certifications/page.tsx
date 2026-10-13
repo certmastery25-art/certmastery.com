@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, ShieldCheck, Waypoints } from "lucide-react";
+import { Activity, ArrowRight, BookOpenCheck, ShieldCheck, Waypoints } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Certifications" };
-const icons = [ShieldCheck, BookOpenCheck, Waypoints];
+const icons = [ShieldCheck, BookOpenCheck, Waypoints, Activity];
 
 export default async function CertificationsPage() {
   const certifications = await prisma.certification.findMany({ orderBy: { name: "asc" }, include: { domains: { orderBy: { sortOrder: "asc" }, include: { _count: { select: { questions: true } } } } } });

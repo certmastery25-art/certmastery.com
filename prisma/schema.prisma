@@ -1,11 +1,11 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "client"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -44,10 +44,10 @@ model User {
   stripeSubscriptionId String?       @unique
   accounts             Account[]
   sessions             Session[]
-  quizSessions          QuizSession[]
-  attempts              Attempt[]
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  quizSessions         QuizSession[]
+  attempts             Attempt[]
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 }
 
 model Account {
@@ -85,16 +85,19 @@ model VerificationToken {
 }
 
 model Certification {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  acronym     String
-  name        String
-  examCode    String
-  description String
-  color       String
-  domains     Domain[]
-  quizzes     QuizSession[]
-  createdAt   DateTime      @default(now())
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  acronym            String
+  name               String
+  examCode           String
+  description        String
+  color              String
+  // Timed exam defaults; certifications without them fall back to 90 seconds per question.
+  timedExamQuestions Int?
+  timedExamMinutes   Int?
+  domains            Domain[]
+  quizzes            QuizSession[]
+  createdAt          DateTime      @default(now())
 }
 
 model Domain {
@@ -139,16 +142,16 @@ model QuestionOption {
 }
 
 model QuizSession {
-  id              String        @id @default(cuid())
+  id              String         @id @default(cuid())
   userId          String?
   certificationId String
   mode            QuizMode
   totalQuestions  Int
-  correctAnswers  Int           @default(0)
-  startedAt       DateTime      @default(now())
+  correctAnswers  Int            @default(0)
+  startedAt       DateTime       @default(now())
   completedAt     DateTime?
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  certification   Certification @relation(fields: [certificationId], references: [id], onDelete: Cascade)
+  user            User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  certification   Certification  @relation(fields: [certificationId], references: [id], onDelete: Cascade)
   attempts        Attempt[]
   questions       QuizQuestion[]
 
@@ -178,7 +181,7 @@ model Attempt {
   answeredAt    DateTime     @default(now())
   user          User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   quizSession   QuizSession? @relation(fields: [quizSessionId], references: [id], onDelete: Cascade)
-  question      Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question      Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([userId, answeredAt])
   @@index([questionId, isCorrect])

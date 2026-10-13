@@ -10,7 +10,7 @@ type LoadedQuiz = {
   quiz: { id: string; mode: "PRACTICE" | "TIMED" | "CUSTOM"; startedAt: string; completedAt: string | null; totalQuestions: number; correctAnswers: number };
   questions: QuizQuestion[];
   answers: AnswerState[];
-  certification: { name: string; examCode: string; slug: string };
+  certification: { name: string; examCode: string; slug: string; timedExamQuestions: number | null; timedExamMinutes: number | null };
 };
 
 function formatTime(seconds: number) {
@@ -77,7 +77,11 @@ export function QuizRunner({ quizId }: { quizId: string }) {
 
   useEffect(() => {
     if (mode !== "TIMED" || !quiz || finished || !ready) return;
-    const duration = Math.max(60, questions.length * 90);
+    // Scale the certification's exam pace to the session length; default to 90 seconds per question.
+    const secondsPerQuestion = certification?.timedExamQuestions && certification.timedExamMinutes
+      ? (certification.timedExamMinutes * 60) / certification.timedExamQuestions
+      : 90;
+    const duration = Math.max(60, Math.round(questions.length * secondsPerQuestion));
     const update = () => {
       const elapsed = Math.floor((Date.now() - new Date(quiz.startedAt).getTime()) / 1000);
       const remaining = Math.max(0, duration - elapsed);
@@ -87,7 +91,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
     update();
     const timer = window.setInterval(update, 1000);
     return () => window.clearInterval(timer);
-  }, [finishQuiz, finished, mode, questions.length, quiz, ready]);
+  }, [certification, finishQuiz, finished, mode, questions.length, quiz, ready]);
 
   const currentQuestion = questions[questionIndex];
   const currentAnswer = currentQuestion ? answers[currentQuestion.id] : undefined;

@@ -1,6 +1,6 @@
 # Certmaster
 
-A free, responsive exam-preparation app for CompTIA Security+ (SY0-701), CompTIA Server+ (SK0-005), and Cisco CCNA (200-301). Built with Next.js App Router, TypeScript, Tailwind, Prisma, NextAuth, Zod, React Hook Form, Zustand, and Lucide.
+A free, responsive exam-preparation app for CompTIA Security+ (SY0-701), CompTIA Server+ (SK0-005), Cisco CCNA (200-301), and Splunk Cloud Certified Admin (SPLK-1005). Built with Next.js App Router, TypeScript, Tailwind, Prisma, NextAuth, Zod, React Hook Form, Zustand, and Lucide.
 
 ## Run locally
 
@@ -26,7 +26,7 @@ npm run db:setup
 npm run dev
 ```
 
-Visit `http://localhost:3000`. The idempotent seed contains three certifications, objective-aligned domains, and 600 original sample questions (200 per certification, distributed across domains by each exam's published objective weighting). The questions live in `prisma/seed.ts` and `prisma/questions/`. Add your own question content before treating the question bank as a complete exam simulator.
+Visit `http://localhost:3000`. The idempotent seed contains four certifications, objective-aligned domains, and 800 original sample questions (200 per certification, distributed across domains by each exam's published objective weighting). The questions live in `prisma/seed.ts` and `prisma/questions/`. Timed exams use a certification's `timedExamQuestions` and `timedExamMinutes` when set (Splunk Cloud Admin: 60 questions in 72 minutes) and otherwise allow 90 seconds per question. Add your own question content before treating the question bank as a complete exam simulator.
 
 ## Authentication
 
@@ -70,4 +70,4 @@ Use a separate Neon database for preview deployments. Do not commit database cre
 - `npm run db:seed` loads or refreshes the sample content.
 - `npm run db:setup` applies migrations and seeds the database.
 
-Question content is original practice material and is not affiliated with or endorsed by CompTIA or Cisco.
+Question content is original practice material and is not affiliated with or endorsed by CompTIA, Cisco, or Splunk.

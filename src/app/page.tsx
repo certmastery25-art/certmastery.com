@@ -1,24 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, Clock3, ShieldCheck, Waypoints } from "lucide-react";
+import { Activity, ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, Clock3, ShieldCheck, Waypoints } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "IT certification exam practice",
-  description: "Build confidence with focused Security+, Server+, and CCNA practice questions and timed exams.",
+  description: "Build confidence with focused Security+, Server+, CCNA, and Splunk Cloud Admin practice questions and timed exams.",
 };
 
-const symbols = [ShieldCheck, Waypoints, BookOpenCheck];
+const symbols = [ShieldCheck, Waypoints, BookOpenCheck, Activity];
 
 export default async function Home() {
   const [session, certifications] = await Promise.all([
     getServerSession(authOptions),
     prisma.certification.findMany({
       orderBy: { name: "asc" },
-      include: { domains: { select: { id: true, name: true, _count: { select: { questions: true } } } } },
+      include: { domains: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, _count: { select: { questions: true } } } } },
     }),
   ]);
   const [attempts, sessions] = session?.user.id
@@ -88,7 +88,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="page-footer"><span>© {new Date().getFullYear()} Certmaster</span><span>Independent exam preparation. Not affiliated with CompTIA or Cisco.</span><Link href="/register">Save your progress <ArrowRight size={14} /></Link></footer>
+      <footer className="page-footer"><span>© {new Date().getFullYear()} Certmaster</span><span>Independent exam preparation. Not affiliated with CompTIA, Cisco or Splunk.</span><Link href="/register">Save your progress <ArrowRight size={14} /></Link></footer>
     </main>
   );
 }

@@ -60,5 +60,5 @@ export async function POST(request: Request) {
     select: { id: true, startedAt: true },
   });
 
-  return NextResponse.json({ quiz, questions, certification: { name: certification.name, examCode: certification.examCode } }, { status: 201 });
+  return NextResponse.json({ quiz, questions, certification: { name: certification.name, examCode: certification.examCode, timedExamQuestions: certification.timedExamQuestions, timedExamMinutes: certification.timedExamMinutes } }, { status: 201 });
 }
