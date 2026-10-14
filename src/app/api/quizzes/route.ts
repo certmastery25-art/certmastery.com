@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { recordEvent } from "@/lib/analytics/record";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -58,6 +59,15 @@ export async function POST(request: Request) {
       questions: { create: questions.map((question, sortOrder) => ({ questionId: question.id, sortOrder })) },
     },
     select: { id: true, startedAt: true },
+  });
+  await recordEvent({
+    type: "exam_started",
+    userId: session?.user.id,
+    certSlug: certification.slug,
+    mode: parsed.data.mode,
+    domain: parsed.data.domain ? questions[0]?.domain.name : null,
+    difficulty: parsed.data.difficulty ?? "ANY",
+    search: parsed.data.search,
   });
 
   return NextResponse.json({ quiz, questions, certification: { name: certification.name, examCode: certification.examCode, timedExamQuestions: certification.timedExamQuestions, timedExamMinutes: certification.timedExamMinutes } }, { status: 201 });

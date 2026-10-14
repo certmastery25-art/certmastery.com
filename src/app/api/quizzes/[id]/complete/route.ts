@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { recordEvent } from "@/lib/analytics/record";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -14,6 +15,7 @@ export async function POST(
   const quiz = await prisma.quizSession.findUnique({
     where: { id },
     include: {
+      certification: { select: { slug: true } },
       attempts: {
         select: {
           id: true,
@@ -55,6 +57,10 @@ export async function POST(
       completedAt: true,
     },
   });
+
+  if (!quiz.completedAt) {
+    await recordEvent({ type: "exam_finished", userId: quiz.userId, certSlug: quiz.certification.slug, mode: quiz.mode });
+  }
 
   return NextResponse.json(completed);
 }

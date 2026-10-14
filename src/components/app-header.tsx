@@ -28,6 +28,7 @@ export function AppHeader() {
             const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
             return <Link key={link.href} href={link.href} className={cn("nav-link", active && "nav-link-active")}>{link.label}</Link>;
           })}
+          {session?.user.role === "ADMIN" && <Link href="/admin" className={cn("nav-link nav-link-admin", pathname.startsWith("/admin") && "nav-link-active")}>Admin</Link>}
         </nav>
         <div className="header-actions">
           {status === "loading" ? <span className="user-skeleton" aria-label="Loading account" /> : session?.user ? (

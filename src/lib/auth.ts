@@ -4,6 +4,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
+import { recordEvent } from "@/lib/analytics/record";
 import { prisma } from "@/lib/prisma";
 
 const credentialsSchema = z.object({
@@ -43,6 +44,13 @@ export const authOptions: NextAuthOptions = {
   providers,
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
+  events: {
+    async signIn({ user, isNewUser }) {
+      // Email registrations log their signup in the register route; this covers new OAuth users.
+      if (isNewUser) await recordEvent({ type: "signup", userId: user.id });
+      await recordEvent({ type: "login", userId: user.id });
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (user?.id) token.id = user.id;

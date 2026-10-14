@@ -186,3 +186,42 @@ model Attempt {
   @@index([userId, answeredAt])
   @@index([questionId, isCorrect])
 }
+
+// Usage analytics. One row per page request or app event; raw rows are kept for 90 days.
+// Never store IP addresses, emails, tokens, or full user-agent strings here.
+model Event {
+  id           BigInt   @id @default(autoincrement())
+  ts           DateTime @default(now())
+  type         String
+  path         String?
+  method       String?
+  status       Int?
+  durationMs   Int?
+  userId       String?
+  anonId       String?
+  certSlug     String?
+  mode         String?
+  domain       String?
+  difficulty   String?
+  search       String?
+  country      String?
+  device       String?
+  referrerHost String?
+  isBot        Boolean  @default(false)
+
+  @@index([ts])
+  @@index([type, ts])
+  @@index([userId, ts])
+  @@index([path, ts])
+}
+
+// Daily rollups of Event so long-range charts keep working after raw events are deleted.
+model DailyStat {
+  day       DateTime @db.Date
+  metric    String
+  dimension String   @default("")
+  value     Int
+
+  @@id([day, metric, dimension])
+  @@index([metric, day])
+}

@@ -1,6 +1,7 @@
 import { hash } from "bcryptjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { recordEvent } from "@/lib/analytics/record";
 import { prisma } from "@/lib/prisma";
 
 // Kept low so hashing fits the Cloudflare Workers Free CPU limit (~10 ms per request). Raise to 12 on a paid plan.
@@ -30,6 +31,8 @@ export async function POST(request: Request) {
     },
     select: { id: true, name: true, email: true },
   });
+
+  await recordEvent({ type: "signup", userId: user.id });
 
   return NextResponse.json({ user }, { status: 201 });
 }

@@ -1,0 +1,31 @@
+# Local development database. Postgres plus Neon's local proxy, so the app's Neon driver
+# works against it unchanged. See "Local database" in README.md.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: main
+    ports:
+      - "54329:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  neon-proxy:
+    image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+    environment:
+      PG_CONNECTION_STRING: postgres://postgres:postgres@postgres:5432/main
+    ports:
+      - "4444:4444"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  db_data:

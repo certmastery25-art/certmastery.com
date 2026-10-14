@@ -1,11 +1,13 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, Difficulty } from "@prisma/client";
+import { configureNeonForLocal } from "../src/lib/neon-local";
 import { ccnaQuestions } from "./questions/ccna";
 import { securityPlusQuestions } from "./questions/security-plus";
 import { serverPlusQuestions } from "./questions/server-plus";
 import { splunkCloudAdminQuestions } from "./questions/splunk-cloud-admin";
 import type { AdditionalQuestion } from "./questions/types";
 
+configureNeonForLocal(process.env.DATABASE_URL);
 const prisma = new PrismaClient({ adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }) });
 
 const certifications = [

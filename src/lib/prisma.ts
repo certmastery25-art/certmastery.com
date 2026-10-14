@@ -1,11 +1,13 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
+import { configureNeonForLocal } from "./neon-local";
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 const requestClients = new WeakMap<object, PrismaClient>();
 
 function createPrismaClient() {
+  configureNeonForLocal(process.env.DATABASE_URL);
   return new PrismaClient({
     adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }),
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],

@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cert-mastery",
-  "main": ".open-next/worker.js",
+  "main": "cloudflare-worker.ts",
   "compatibility_date": "2026-10-05",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
@@ -14,6 +14,8 @@
       "service": "cert-mastery"
     }
   ],
+  // Daily at 03:15 UTC: roll raw events up into DailyStat and delete events older than 90 days.
+  "triggers": { "crons": ["15 3 * * *"] },
   "observability": {
     "enabled": true
   }

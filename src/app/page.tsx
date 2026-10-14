@@ -88,7 +88,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="page-footer"><span>© {new Date().getFullYear()} Certmaster</span><span>Independent exam preparation. Not affiliated with CompTIA, Cisco or Splunk.</span><Link href="/register">Save your progress <ArrowRight size={14} /></Link></footer>
+      <footer className="page-footer"><span>© {new Date().getFullYear()} Certmaster</span><span>Independent exam preparation. Not affiliated with CompTIA, Cisco or Splunk. <Link href="/privacy">Privacy</Link></span><Link href="/register">Save your progress <ArrowRight size={14} /></Link></footer>
     </main>
   );
 }
