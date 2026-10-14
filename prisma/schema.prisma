@@ -95,6 +95,8 @@ model Certification {
   // Timed exam defaults; certifications without them fall back to 90 seconds per question.
   timedExamQuestions Int?
   timedExamMinutes   Int?
+  // Optional short note shown on the practice page, such as how the certification is earned.
+  note               String?
   domains            Domain[]
   quizzes            QuizSession[]
   createdAt          DateTime      @default(now())

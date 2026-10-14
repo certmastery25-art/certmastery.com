@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { promptPreview } from "@/components/question-prompt";
 import { AdminToolbar, CsvLink, DataTable, LoadState, Panel, formatNumber, formatPercent, useAdminData, useAdminFilters, type Column } from "./admin-kit";
 
 type Row = Record<string, unknown>;
@@ -15,7 +16,7 @@ export function ContentView() {
   const csv = (table: string) => <CsvLink href={`/api/admin/content?${rangeQuery}&format=csv&table=${table}`} />;
   const questionLink: Column<Row> = {
     key: "prompt", label: "Question",
-    render: (row) => <Link className="admin-link" href={`/admin/questions/${row.question_id as string}?${rangeQuery}`}><span className="admin-mono">{row.question_id as string}</span> {row.prompt as string}</Link>,
+    render: (row) => <Link className="admin-link" href={`/admin/questions/${row.question_id as string}?${rangeQuery}`}><span className="admin-mono">{row.question_id as string}</span> {promptPreview(row.prompt as string)}</Link>,
   };
   const eventNote = data?.eventsClipped ? `Event-based lists cover ${data.range.retentionStart} onward; older raw events are deleted after 90 days.` : undefined;
 

@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { Activity, ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, Clock3, ShieldCheck, Waypoints } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, Clock3, Waypoints } from "lucide-react";
 import { authOptions } from "@/lib/auth";
+import { certificationIcon } from "@/lib/cert-icons";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "IT certification exam practice",
-  description: "Build confidence with focused Security+, Server+, CCNA, and Splunk Cloud Admin practice questions and timed exams.",
+  description: "Build confidence with focused Security+, Server+, CCNA, CCNP Enterprise, and Splunk Cloud Admin practice questions and timed exams.",
 };
-
-const symbols = [ShieldCheck, Waypoints, BookOpenCheck, Activity];
 
 export default async function Home() {
   const [session, certifications] = await Promise.all([
@@ -59,8 +58,8 @@ export default async function Home() {
       <section className="section-block" aria-labelledby="certifications-heading">
         <div className="section-heading-row"><div><p className="eyebrow">PICK YOUR PATH</p><h2 id="certifications-heading">Choose a certification</h2></div><Link className="text-link" href="/certifications">All certifications <ArrowRight size={16} /></Link></div>
         <div className="cert-grid">
-          {certifications.map((certification, index) => {
-            const Icon = symbols[index % symbols.length];
+          {certifications.map((certification) => {
+            const Icon = certificationIcon(certification.slug);
             const certSessions = sessions.filter((item) => item.certificationId === certification.id);
             const certTotal = certSessions.reduce((total, item) => total + item.totalQuestions, 0);
             const certCorrect = certSessions.reduce((total, item) => total + item.correctAnswers, 0);

@@ -1,6 +1,6 @@
 # Certmaster
 
-A free, responsive exam-preparation app for CompTIA Security+ (SY0-701), CompTIA Server+ (SK0-005), Cisco CCNA (200-301), and Splunk Cloud Certified Admin (SPLK-1005). Built with Next.js App Router, TypeScript, Tailwind, Prisma, NextAuth, Zod, React Hook Form, Zustand, and Lucide.
+A free, responsive exam-preparation app for CompTIA Security+ (SY0-701), CompTIA Server+ (SK0-005), Cisco CCNA (200-301), Cisco CCNP Enterprise core exam ENCOR (350-401 v1.2), and Splunk Cloud Certified Admin (SPLK-1005). Built with Next.js App Router, TypeScript, Tailwind, Prisma, NextAuth, Zod, React Hook Form, Zustand, and Lucide.
 
 ## Run locally
 
@@ -26,7 +26,7 @@ npm run db:setup
 npm run dev
 ```
 
-Visit `http://localhost:3000`. The idempotent seed contains four certifications, objective-aligned domains, and 800 original sample questions (200 per certification, distributed across domains by each exam's published objective weighting). The questions live in `prisma/seed.ts` and `prisma/questions/`. Timed exams use a certification's `timedExamQuestions` and `timedExamMinutes` when set (Splunk Cloud Admin: 60 questions in 72 minutes) and otherwise allow 90 seconds per question. Add your own question content before treating the question bank as a complete exam simulator.
+Visit `http://localhost:3000`. The idempotent seed contains five certifications, objective-aligned domains, and 1,000 original sample questions (200 per certification, distributed across domains by each exam's published objective weighting). The questions live in `prisma/seed.ts` and `prisma/questions/`; wrap exhibits such as show output or code in ``` fences inside a prompt and the quiz renders them in monospace. Timed exams use a certification's `timedExamQuestions` and `timedExamMinutes` when set (Splunk Cloud Admin: 60 questions in 72 minutes; CCNP Enterprise: an estimated 100 questions in 120 minutes) and otherwise allow 90 seconds per question. Add your own question content before treating the question bank as a complete exam simulator.
 
 ## Authentication
 

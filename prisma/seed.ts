@@ -2,6 +2,7 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient, Difficulty } from "@prisma/client";
 import { configureNeonForLocal } from "../src/lib/neon-local";
 import { ccnaQuestions } from "./questions/ccna";
+import { ccnpEnterpriseQuestions } from "./questions/ccnp-enterprise";
 import { securityPlusQuestions } from "./questions/security-plus";
 import { serverPlusQuestions } from "./questions/server-plus";
 import { splunkCloudAdminQuestions } from "./questions/splunk-cloud-admin";
@@ -54,6 +55,26 @@ const certifications = [
       { name: "IP Services", objective: "4.0", sortOrder: 4 },
       { name: "Security Fundamentals", objective: "5.0", sortOrder: 5 },
       { name: "Automation & Programmability", objective: "6.0", sortOrder: 6 },
+    ],
+  },
+  {
+    slug: "ccnp-enterprise",
+    acronym: "CCNP Enterprise",
+    name: "Cisco CCNP Enterprise",
+    examCode: "350-401",
+    description: "Core enterprise networking: architecture, virtualization, routing and switching, assurance, security and automation.",
+    color: "#3b4fa0",
+    // Cisco does not publish ENCOR's question count; 100 questions in 120 minutes is an estimate.
+    timedExamQuestions: 100,
+    timedExamMinutes: 120,
+    note: "CCNP Enterprise requires ENCOR plus one concentration exam. This bank covers the ENCOR core exam (v1.2). Cisco does not publish ENCOR's question count, so the timed exam uses an estimated 100 questions in 120 minutes.",
+    domains: [
+      { name: "Architecture", objective: "1.0", sortOrder: 1 },
+      { name: "Virtualization", objective: "2.0", sortOrder: 2 },
+      { name: "Infrastructure", objective: "3.0", sortOrder: 3 },
+      { name: "Network Assurance", objective: "4.0", sortOrder: 4 },
+      { name: "Security", objective: "5.0", sortOrder: 5 },
+      { name: "Automation and Artificial Intelligence", objective: "6.0", sortOrder: 6 },
     ],
   },
   {
@@ -320,6 +341,7 @@ const additionalQuestions = [
     ["Automation & Programmability", Difficulty.HARD, "Why should an automation script avoid embedding credentials directly in source code?", "Source code may be copied or exposed, causing credential compromise", "It makes scripts run faster", "It prevents JSON parsing", "It increases link bandwidth", "Secrets should be supplied through protected secret stores or environment mechanisms rather than committed to code."],
     ...ccnaQuestions,
   ]),
+  ...buildAdditionalQuestions("ccnp", "ccnp-enterprise", ccnpEnterpriseQuestions, 1),
   ...buildAdditionalQuestions("splk", "splunk-cloud-admin", splunkCloudAdminQuestions, 1),
 ];
 
@@ -331,8 +353,8 @@ async function main() {
   for (const item of certifications) {
     const certification = await prisma.certification.upsert({
       where: { slug: item.slug },
-      update: { acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color, timedExamQuestions: item.timedExamQuestions, timedExamMinutes: item.timedExamMinutes },
-      create: { slug: item.slug, acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color, timedExamQuestions: item.timedExamQuestions, timedExamMinutes: item.timedExamMinutes },
+      update: { acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color, timedExamQuestions: item.timedExamQuestions, timedExamMinutes: item.timedExamMinutes, note: item.note },
+      create: { slug: item.slug, acronym: item.acronym, name: item.name, examCode: item.examCode, description: item.description, color: item.color, timedExamQuestions: item.timedExamQuestions, timedExamMinutes: item.timedExamMinutes, note: item.note },
     });
 
     for (const domain of item.domains) {

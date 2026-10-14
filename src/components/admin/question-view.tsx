@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { QuestionPrompt } from "@/components/question-prompt";
 import { cn } from "@/lib/utils";
 import { AdminToolbar, LoadState, Panel, formatNumber, formatPercent, useAdminData, useAdminFilters } from "./admin-kit";
 
@@ -32,7 +33,7 @@ export function QuestionView({ id }: { id: string }) {
       {data && (
         <div className="admin-stack">
           <Panel title={`${data.question.domain.certification.acronym} · ${data.question.domain.objective} ${data.question.domain.name}`} note={`Question ${data.question.id} · ${data.question.difficulty.toLowerCase()} · edit it in prisma/questions/ or prisma/seed.ts, then re-run the seed.`}>
-            <p className="admin-question-prompt">{data.question.prompt}</p>
+            <QuestionPrompt prompt={data.question.prompt} as="p" className="admin-question-prompt" />
             <ul className="admin-options">
               {data.question.options.map((option) => {
                 const picks = data.picks.find((pick) => pick.label === option.label)?.picks ?? 0;

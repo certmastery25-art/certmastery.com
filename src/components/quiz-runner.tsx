@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Check, CircleHelp, Clock3, Flag, LoaderCircle, RotateCcw, X } from "lucide-react";
+import { QuestionPrompt } from "@/components/question-prompt";
 import { useQuizStore, type AnswerState, type QuizQuestion } from "@/stores/quiz-store";
 
 type LoadedQuiz = {
@@ -170,7 +171,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
         <span className="domain-chip">{currentQuestion.domain.objective} · {currentQuestion.domain.name}</span>
         <span className={`difficulty-tag difficulty-${currentQuestion.difficulty.toLowerCase()}`}>{currentQuestion.difficulty.toLowerCase()}</span>
       </div>
-      <h1 id="question-heading" className="question-prompt">{currentQuestion.prompt}</h1>
+      <QuestionPrompt prompt={currentQuestion.prompt} headingId="question-heading" />
       {currentQuestion.imageUrl && <Image className="question-image" src={currentQuestion.imageUrl} alt="Question reference" width={720} height={405} unoptimized />}
 
       <fieldset className="answer-fieldset" disabled={Boolean(currentAnswer) || pending}>
