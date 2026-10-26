@@ -27,7 +27,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [pending, setPending] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [guestLimitReached, setGuestLimitReached] = useState(false);
+  const [authRequired, setAuthRequired] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -110,14 +110,13 @@ export function QuizRunner({ quizId }: { quizId: string }) {
       });
       const result = await response.json();
       if (!response.ok) {
-        if (result.code === "GUEST_LIMIT_REACHED") {
-          setGuestLimitReached(true);
+        if (result.code === "AUTH_REQUIRED") {
+          setAuthRequired(true);
           return;
         }
         throw new Error(result.error ?? "We couldn't save your answer.");
       }
       setAnswer({ questionId: currentQuestion.id, selectedLabel: label, ...result });
-      if (result.guestLimitReached) setGuestLimitReached(true);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "We couldn't save your answer.");
     } finally {
@@ -137,14 +136,14 @@ export function QuizRunner({ quizId }: { quizId: string }) {
   const correctCount = Object.values(answers).filter((answer) => answer.isCorrect).length;
   const percent = Math.round((correctCount / questions.length) * 100);
 
-  if (guestLimitReached) {
+  if (authRequired) {
     return (
-      <section className="empty-state" aria-labelledby="guest-limit-heading">
+      <section className="empty-state" aria-labelledby="account-required-heading">
         <Flag size={26} />
-        <h1 id="guest-limit-heading">Your 10 free questions are complete.</h1>
-        <p>Create a free account to continue practicing and explore the rest of Certmaster.</p>
+        <h1 id="account-required-heading">An account is required to access questions.</h1>
+        <p>Create a free account or sign in to continue practicing.</p>
         <div className="result-actions">
-          <Link className="button button-primary" href="/register?reason=question-limit">Create a free account <ArrowRight size={16} /></Link>
+          <Link className="button button-primary" href="/register?reason=account-required">Create a free account <ArrowRight size={16} /></Link>
           <Link className="button button-secondary" href="/login">Already have an account? Sign in</Link>
         </div>
       </section>
