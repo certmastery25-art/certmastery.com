@@ -27,6 +27,7 @@ export function QuizRunner({ quizId }: { quizId: string }) {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [pending, setPending] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [guestLimitReached, setGuestLimitReached] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -108,8 +109,15 @@ export function QuizRunner({ quizId }: { quizId: string }) {
         body: JSON.stringify({ questionId: currentQuestion.id, selectedLabel: label, quizSessionId: quiz.id }),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error ?? "We couldn't save your answer.");
+      if (!response.ok) {
+        if (result.code === "GUEST_LIMIT_REACHED") {
+          setGuestLimitReached(true);
+          return;
+        }
+        throw new Error(result.error ?? "We couldn't save your answer.");
+      }
       setAnswer({ questionId: currentQuestion.id, selectedLabel: label, ...result });
+      if (result.guestLimitReached) setGuestLimitReached(true);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "We couldn't save your answer.");
     } finally {
@@ -128,6 +136,20 @@ export function QuizRunner({ quizId }: { quizId: string }) {
 
   const correctCount = Object.values(answers).filter((answer) => answer.isCorrect).length;
   const percent = Math.round((correctCount / questions.length) * 100);
+
+  if (guestLimitReached) {
+    return (
+      <section className="empty-state" aria-labelledby="guest-limit-heading">
+        <Flag size={26} />
+        <h1 id="guest-limit-heading">Your 10 free questions are complete.</h1>
+        <p>Create a free account to continue practicing and explore the rest of Certmaster.</p>
+        <div className="result-actions">
+          <Link className="button button-primary" href="/register?reason=question-limit">Create a free account <ArrowRight size={16} /></Link>
+          <Link className="button button-secondary" href="/login">Already have an account? Sign in</Link>
+        </div>
+      </section>
+    );
+  }
 
   if (finished) {
     return (

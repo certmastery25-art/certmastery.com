@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
+import { GUEST_QUESTION_COOKIE, GUEST_QUESTION_LIMIT, getGuestQuestionCookie, readGuestQuestionCount, signGuestQuestionCount } from "@/lib/guest-access";
 import { prisma } from "@/lib/prisma";
 
 const answerSchema = z.object({
@@ -26,6 +27,16 @@ export async function POST(request: Request) {
   if (!chosen || !correctOption) return NextResponse.json({ error: "This question is not configured correctly." }, { status: 500 });
 
   const session = await getServerSession(authOptions);
+  const guestQuestionCount = session?.user
+    ? 0
+    : await readGuestQuestionCount(getGuestQuestionCookie(request.headers.get("cookie")));
+  if (!session?.user && guestQuestionCount >= GUEST_QUESTION_LIMIT) {
+    return NextResponse.json(
+      { error: "Create a free account to continue after your 10 guest questions.", code: "GUEST_LIMIT_REACHED" },
+      { status: 403 },
+    );
+  }
+
   const quiz = parsed.data.quizSessionId
     ? await prisma.quizSession.findUnique({
       where: { id: parsed.data.quizSessionId },
@@ -52,12 +63,26 @@ export async function POST(request: Request) {
   });
   if (isCorrect && quiz) await prisma.quizSession.update({ where: { id: quiz.id }, data: { correctAnswers: { increment: 1 } } });
 
-  if (quiz?.mode === "TIMED") return NextResponse.json({ recorded: true });
-
-  return NextResponse.json({
-    isCorrect,
-    correctLabel: correctOption.label,
-    explanation: question.explanation,
-    correctText: correctOption.text,
+  const guestLimitReached = !session?.user && guestQuestionCount + 1 >= GUEST_QUESTION_LIMIT;
+  const response = NextResponse.json({
+    ...(quiz?.mode === "TIMED"
+      ? { recorded: true }
+      : {
+        isCorrect,
+        correctLabel: correctOption.label,
+        explanation: question.explanation,
+        correctText: correctOption.text,
+      }),
+    ...(guestLimitReached ? { guestLimitReached: true } : {}),
   });
+  if (!session?.user) {
+    response.cookies.set(GUEST_QUESTION_COOKIE, await signGuestQuestionCount(guestQuestionCount + 1), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
+  return response;
 }
