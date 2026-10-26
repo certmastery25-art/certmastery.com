@@ -16,7 +16,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Certmaster | IT certification practice", template: "%s | Certmaster" },
+  title: { default: "CertMastery | Prepare. Practice. Pass.", template: "%s | CertMastery" },
   description: "Prepare for Security+, Server+, CCNA, CCNP Enterprise, and Splunk Cloud Admin with focused practice questions, timed exams, and progress you can measure.",
   robots: { index: true, follow: true },
 };

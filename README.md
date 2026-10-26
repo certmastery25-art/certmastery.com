@@ -1,4 +1,4 @@
-# Certmaster
+# CertMastery
 
 A free, responsive exam-preparation app for CompTIA Security+ (SY0-701), CompTIA Server+ (SK0-005), Cisco CCNA (200-301), Cisco CCNP Enterprise core exam ENCOR (350-401 v1.2), and Splunk Cloud Certified Admin (SPLK-1005). Built with Next.js App Router, TypeScript, Tailwind, Prisma, NextAuth, Zod, React Hook Form, Zustand, and Lucide.
 

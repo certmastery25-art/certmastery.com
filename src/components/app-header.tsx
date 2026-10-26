@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { ArrowUpRight, BookOpenCheck, ChevronDown, CircleUserRound, LogOut } from "lucide-react";
+import { ArrowUpRight, ChevronDown, CircleUserRound, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -19,9 +20,9 @@ export function AppHeader() {
   return (
     <header className="app-header">
       <div className="header-inner">
-        <Link href="/" className="brand" aria-label="Certmaster home">
-          <span className="brand-mark"><BookOpenCheck size={19} strokeWidth={2.2} /></span>
-          <span>cert<span className="brand-light">master</span></span>
+        <Link href="/" className="brand" aria-label="CertMastery home">
+          <Image className="brand-mark" src="/brand/certmastery-mark.png" alt="" width={36} height={36} priority unoptimized />
+          <span className="brand-name">CERT<span className="brand-light">MASTERY</span></span>
         </Link>
         <nav className="main-nav" aria-label="Main navigation">
           {links.map((link) => {

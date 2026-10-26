@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Certmaster production build",
+			"label": "CertMastery production build",
 			"type": "shell",
 			"command": "npm.cmd",
 			"args": [
@@ -16,7 +16,7 @@
 			"group": "build"
 		},
 		{
-			"label": "Certmaster development server",
+			"label": "CertMastery development server",
 			"type": "shell",
 			"command": "npm.cmd",
 			"args": [
@@ -27,7 +27,7 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Certmaster development server",
+			"label": "CertMastery development server",
 			"type": "shell",
 			"command": "npm.cmd",
 			"args": [

@@ -35,9 +35,10 @@ button { color: inherit; }
 
 .app-header { position: sticky; z-index: 30; top: 0; height: 68px; border-bottom: 1px solid var(--line); background: rgba(255,255,253,.96); backdrop-filter: blur(14px); }
 .header-inner { width: min(1160px, calc(100% - 64px)); height: 100%; margin: 0 auto; display: flex; align-items: center; }
-.brand { display: inline-flex; align-items: center; gap: 10px; min-width: 228px; color: #183e37; font-size: 17px; font-weight: 750; letter-spacing: 0; }
-.brand-mark { width: 32px; height: 32px; display: grid; place-items: center; color: white; background: var(--green); border-radius: 6px; }
-.brand-light { font-weight: 450; color: #54635c; }
+.brand { display: inline-flex; align-items: center; gap: 9px; min-width: 228px; color: #14295c; font-size: 18px; font-weight: 800; letter-spacing: .02em; }
+.brand-mark { width: 36px; height: 36px; object-fit: contain; }
+.brand-name { line-height: 1; }
+.brand-light { color: #1fb5a0; }
 .main-nav { display: flex; align-items: stretch; align-self: stretch; gap: 27px; }
 .nav-link { position: relative; display: flex; align-items: center; color: #68736e; font-size: 13px; font-weight: 520; transition: color .18s ease; }
 .nav-link:hover, .nav-link-active { color: var(--green); }
@@ -357,7 +358,7 @@ button { color: inherit; }
   .app-header { height: 61px; }
   .header-inner, .main-content { width: calc(100% - 32px); }
   .brand { min-width: 0; font-size: 16px; }
-  .brand-mark { width: 30px; height: 30px; }
+  .brand-mark { width: 32px; height: 32px; }
   .main-nav { gap: 13px; margin-left: auto; }
   .nav-link { font-size: 10px; }
   .header-actions { gap: 7px; margin-left: 11px; }
