@@ -84,7 +84,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         {isRegister ? "Already have an account? " : "New to CertMastery? "}
         <Link href={isRegister ? "/login" : "/register"}>{isRegister ? "Sign in" : "Create an account"}</Link>
       </p>
-      <Link href="/" className="back-link"><ArrowLeft size={15} /> Back to overview</Link>
+      <Link href="/" className="back-link"><ArrowLeft size={15} /> Back to home</Link>
     </form>
   );
 }

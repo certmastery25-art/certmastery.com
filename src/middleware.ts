@@ -1,8 +1,11 @@
 import { getToken } from "next-auth/jwt";
 import { NextResponse, type NextRequest } from "next/server";
 
-function isQuestionAccessPath(pathname: string) {
+// Practice questions and individual labs need an account; the /certifications and /labs listings stay public.
+function isAccountOnlyPath(pathname: string) {
   return pathname.startsWith("/practice/")
+    || pathname.startsWith("/labs/")
+    || pathname.startsWith("/api/labs/")
     || pathname.startsWith("/quiz/")
     || pathname === "/api/questions"
     || pathname.startsWith("/api/quizzes")
@@ -11,14 +14,14 @@ function isQuestionAccessPath(pathname: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (!isQuestionAccessPath(pathname)) return NextResponse.next();
+  if (!isAccountOnlyPath(pathname)) return NextResponse.next();
 
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
   if (token) return NextResponse.next();
 
   if (pathname.startsWith("/api/")) {
     return NextResponse.json(
-      { error: "Create an account or sign in to access practice questions.", code: "AUTH_REQUIRED" },
+      { error: "Create an account or sign in to access practice questions and labs.", code: "AUTH_REQUIRED" },
       { status: 401 },
     );
   }

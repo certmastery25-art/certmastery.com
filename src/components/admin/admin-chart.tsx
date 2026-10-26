@@ -18,7 +18,7 @@ Chart.register(BarController, BarElement, CategoryScale, Legend, LineController,
 
 // Fixed categorical order, validated for color-vision deficiency and contrast on the white panel surface.
 // Assign series to slots in this order; never cycle or reuse a slot for another meaning.
-export const SERIES_COLORS = ["#009182", "#d0542f", "#3a64c8"] as const;
+export const SERIES_COLORS = ["#0F766E", "#A66A12", "#8FB9A8"] as const;
 
 const INK = "#5d6b63";
 const GRID = "#eceee8";
@@ -55,7 +55,7 @@ export function AdminChart({ type, labels, series, stacked = false, height = 240
         interaction: { mode: "index", intersect: false },
         plugins: {
           legend: { display: series.length > 1, position: "top", align: "start", labels: { color: INK, font, usePointStyle: true, pointStyle: "circle", boxWidth: 8, boxHeight: 8 } },
-          tooltip: { backgroundColor: "#1c2a25", titleFont: font, bodyFont: font, padding: 9, callbacks: { label: (context) => ` ${context.dataset.label}: ${Number(context.parsed.y).toLocaleString("en-US")}${suffix}` } },
+          tooltip: { backgroundColor: "#202B27", titleFont: font, bodyFont: font, padding: 9, callbacks: { label: (context) => ` ${context.dataset.label}: ${Number(context.parsed.y).toLocaleString("en-US")}${suffix}` } },
         },
         scales: {
           x: { stacked, grid: { display: false }, ticks: { color: INK, font, maxRotation: 0, autoSkip: true, maxTicksLimit: 10 }, border: { color: GRID } },

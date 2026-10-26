@@ -34,9 +34,13 @@ Email and password registration/sign-in work locally. Google sign-in is optional
 
 ## Database
 
-Development and production both use Neon PostgreSQL through `prisma/schema.prisma` and the Neon driver adapter. The schema contains users, NextAuth accounts/sessions, certifications, domains, questions/options, quiz sessions, ordered quiz questions, and attempts.
+Development and production both use Neon PostgreSQL through `prisma/schema.prisma` and the Neon driver adapter. The schema contains users, NextAuth accounts/sessions, certifications, domains, questions/options, quiz sessions, ordered quiz questions, attempts, and saved lab completions.
 
 Schema changes go through Prisma migrations in `prisma/migrations`: edit the schema, run `npx prisma migrate dev --name <change>` against a development database, commit the generated migration, and apply it elsewhere with `npm run db:migrate`.
+
+## Hands-on labs
+
+`/labs` currently offers a guided CCNA Network Access lab in a browser-based Cisco IOS command simulator. The simulator supports a deliberately limited set of VLAN and access-port commands; it does not run arbitrary shell commands or connect to network devices. Learners can use it without an account, while signed-in learners have verified lab completions saved to their account. The server replays the submitted command history through the same simulator and only records completion when the required configuration and verification command are present.
 
 ## Deploy to Cloudflare Workers
 

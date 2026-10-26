@@ -1,16 +1,41 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { ArrowRight, ArrowUpRight, BookOpenCheck, CheckCircle2, Clock3, Waypoints } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, CheckCircle2, Clock3, ListChecks, Network, SlidersHorizontal, Target, Terminal } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { certificationIcon } from "@/lib/cert-icons";
+import { ccnaLabs, initialCcnaLabState, promptForMode, runCcnaLabCommand } from "@/lib/labs/ccna";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "IT certification exam practice",
-  description: "Build confidence with focused Security+, Server+, CCNA, CCNP Enterprise, and Splunk Cloud Admin practice questions and timed exams.",
+  title: { absolute: "CertMastery | IT certification practice tests and hands-on labs" },
+  description: "Prepare for Security+, Server+, CCNA, CCNP Enterprise, and Splunk Cloud Admin with focused practice questions, timed exams, and hands-on networking labs.",
 };
+
+const studyModes = [
+  { icon: BookOpenCheck, title: "Practice", copy: "Answer at your own pace and read the explanation after every question." },
+  { icon: Clock3, title: "Timed exam", copy: "Work through a full timed session to rehearse exam-day pacing." },
+  { icon: SlidersHorizontal, title: "Custom quiz", copy: "Choose the domain, difficulty, and number of questions to target a gap." },
+];
+
+const steps = [
+  { icon: ListChecks, title: "Choose a certification", copy: "Every question bank is organised by the official exam domains." },
+  { icon: BookOpenCheck, title: "Practise by domain", copy: "Learn from explanations and build understanding one topic at a time." },
+  { icon: Clock3, title: "Rehearse under time", copy: "Timed exams show whether your knowledge holds up at exam pace." },
+  { icon: Target, title: "Focus on weak areas", copy: "Your progress page highlights the domains that need another session." },
+];
+
+// Runs the real simulator so the preview always matches what learners see in the lab.
+function labPreview() {
+  let state = initialCcnaLabState;
+  return ["enable", "configure terminal", "vlan 20", "name SALES"].map((command) => {
+    const prompt = promptForMode(state.mode);
+    const result = runCcnaLabCommand(state, command);
+    state = result.state;
+    return { prompt, command, output: result.output };
+  });
+}
 
 export default async function Home() {
   const [session, certifications] = await Promise.all([
@@ -20,74 +45,147 @@ export default async function Home() {
       include: { domains: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, _count: { select: { questions: true } } } } },
     }),
   ]);
-  const [attempts, sessions] = session?.user.id
-    ? await Promise.all([
-      prisma.attempt.findMany({ where: { userId: session.user.id }, select: { isCorrect: true } }),
-      prisma.quizSession.findMany({
-        where: { userId: session.user.id, completedAt: { not: null } },
-        select: { certificationId: true, totalQuestions: true, correctAnswers: true },
-      }),
-    ])
-    : [[], []];
+  const attempts = session?.user.id
+    ? await prisma.attempt.findMany({ where: { userId: session.user.id }, select: { isCorrect: true } })
+    : [];
   const answered = attempts.length;
-  const correct = attempts.filter((attempt) => attempt.isCorrect).length;
-  const accuracy = answered ? Math.round((correct / answered) * 100) : 0;
+  const accuracy = answered ? Math.round((attempts.filter((attempt) => attempt.isCorrect).length / answered) * 100) : 0;
   const displayName = session?.user.name?.split(" ")[0];
+  const questionCount = (certification: (typeof certifications)[number]) => certification.domains.reduce((sum, domain) => sum + domain._count.questions, 0);
+  const totalQuestions = certifications.reduce((sum, certification) => sum + questionCount(certification), 0);
+  const previewCert = certifications.find((certification) => certification.slug === "security-plus") ?? certifications[0];
+  const firstLab = ccnaLabs[0];
 
   return (
-    <main className="main-content">
-      <section className="welcome-strip">
-        <div>
-          <p className="eyebrow"><span className="status-dot" /> CERTMASTERY / EXAM PREP</p>
-          <h1>{displayName ? `Welcome back, ${displayName}.` : "Make your next cert a sure thing."}</h1>
-          <p className="welcome-copy">Focused practice for the certifications that move your IT career forward.</p>
-        </div>
-        <div className="welcome-actions">
-          <Link href="/certifications" className="button button-primary"><BookOpenCheck size={17} /> Choose a certification</Link>
-          {!session?.user && <Link href="/register" className="welcome-signup">Create free account <ArrowUpRight size={14} /></Link>}
-        </div>
-      </section>
+    <main className="home">
+      <section className="band band-mint hero">
+        <div className="container hero-grid">
+          <div className="hero-copy">
+            <p className="eyebrow">{displayName ? `Welcome back, ${displayName}` : "IT certification preparation"}</p>
+            <h1>Prepare with Purpose. Practise with Confidence.</h1>
+            <p className="hero-lead">Build certification-ready skills with focused practice questions, practical technical labs, and structured learning experiences.</p>
+            <div className="hero-actions">
+              <Link href="/certifications" className="button button-primary button-large">Explore Certifications <ArrowRight size={17} /></Link>
+              <Link href="/labs" className="button button-secondary button-large">Explore Hands-on Labs</Link>
+            </div>
+            {session?.user ? (
+              <dl className="hero-stats">
+                <div><dt>Questions answered</dt><dd>{answered}</dd></div>
+                <div><dt>Accuracy</dt><dd>{answered ? `${accuracy}%` : "—"}</dd></div>
+                <div><dt>Your record</dt><dd><Link href="/history" className="text-link">View progress <ArrowRight size={14} /></Link></dd></div>
+              </dl>
+            ) : (
+              <p className="hero-note"><CheckCircle2 size={16} /> Free account. {totalQuestions.toLocaleString("en-US")} original questions across {certifications.length} certifications.</p>
+            )}
+          </div>
 
-      <section className="overview-grid" aria-label="Study overview">
-        <div className="overview-cell overview-cell-feature"><div className="overview-icon overview-icon-green"><BookOpenCheck size={18} /></div><div><span className="overview-label">QUESTION BANK</span><strong>{certifications.reduce((total, item) => total + item.domains.reduce((sum, domain) => sum + domain._count.questions, 0), 0)}</strong><span className="overview-note">original practice questions</span></div></div>
-        <div className="overview-cell"><div className="overview-icon overview-icon-coral"><CheckCircle2 size={18} /></div><div><span className="overview-label">QUESTIONS ANSWERED</span><strong>{answered}</strong><span className="overview-note">{session?.user ? "across completed sessions" : "sign in to save your progress"}</span></div></div>
-        <div className="overview-cell"><div className="overview-icon overview-icon-blue"><Clock3 size={18} /></div><div><span className="overview-label">ACCURACY</span><strong>{session?.user ? `${accuracy}%` : "—"}</strong><span className="overview-note">{session?.user ? "across completed quizzes" : "build a measurable streak"}</span></div></div>
-        <div className="overview-cell overview-cell-access"><span className="free-pill"><CheckCircle2 size={14} /> Free, always</span><span className="overview-note">Every practice mode is open to everyone.</span></div>
-      </section>
-
-      <section className="section-block" aria-labelledby="certifications-heading">
-        <div className="section-heading-row"><div><p className="eyebrow">PICK YOUR PATH</p><h2 id="certifications-heading">Choose a certification</h2></div><Link className="text-link" href="/certifications">All certifications <ArrowRight size={16} /></Link></div>
-        <div className="cert-grid">
-          {certifications.map((certification) => {
-            const Icon = certificationIcon(certification.slug);
-            const certSessions = sessions.filter((item) => item.certificationId === certification.id);
-            const certTotal = certSessions.reduce((total, item) => total + item.totalQuestions, 0);
-            const certCorrect = certSessions.reduce((total, item) => total + item.correctAnswers, 0);
-            const certAccuracy = certTotal ? Math.round((certCorrect / certTotal) * 100) : 0;
-            const questionCount = certification.domains.reduce((total, domain) => total + domain._count.questions, 0);
-            return (
-              <article className="cert-card" key={certification.id} style={{ "--cert-color": certification.color } as React.CSSProperties}>
-                <div className="cert-card-top"><span className="cert-symbol"><Icon size={19} /></span><span className="exam-code">{certification.examCode}</span></div>
-                <h3>{certification.acronym}</h3><p className="cert-name">{certification.name}</p>
-                <div className="cert-domains" aria-label="Exam domains">{certification.domains.slice(0, 3).map((domain) => <span key={domain.id}>{domain.name}</span>)}{certification.domains.length > 3 && <span>+{certification.domains.length - 3} more</span>}</div>
-                <div className="cert-card-footer"><span>{questionCount} questions <span className="footer-dot">·</span> {certification.domains.length} domains</span>{certTotal > 0 && <span className="cert-accuracy">{certAccuracy}% accuracy</span>}</div>
-                <Link className="cert-card-link" href={`/practice/${certification.slug}`} aria-label={`Practice ${certification.acronym}`}><ArrowRight size={18} /></Link>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="study-method" aria-label="Study modes">
-        <div className="study-method-intro"><p className="eyebrow">BUILT AROUND HOW YOU LEARN</p><h2>One goal.<br />Three ways to get there.</h2><p>Build your foundation, find the gaps, then walk into exam day ready.</p></div>
-        <div className="method-list">
-          <div className="method-item"><span className="method-number">01</span><BookOpenCheck size={20} /><div><strong>Practice</strong><p>Answer at your pace. Learn from every explanation.</p></div><ArrowRight size={16} /></div>
-          <div className="method-item"><span className="method-number">02</span><Clock3 size={20} /><div><strong>Timed exams</strong><p>Build your confidence under exam-day conditions.</p></div><ArrowRight size={16} /></div>
-          <div className="method-item"><span className="method-number">03</span><Waypoints size={20} /><div><strong>Custom quizzes</strong><p>Focus on the domains and difficulty you choose.</p></div><ArrowRight size={16} /></div>
+          <div className="hero-preview" aria-label="Product preview">
+            {previewCert && (
+              <div className="preview-card">
+                <div className="preview-card-head">
+                  <span className="cert-symbol">{(() => { const Icon = certificationIcon(previewCert.slug); return <Icon size={18} />; })()}</span>
+                  <div><strong>{previewCert.acronym}</strong><span>{previewCert.examCode} · {questionCount(previewCert)} questions</span></div>
+                </div>
+                <p className="preview-label">Choose a study mode</p>
+                <ul className="preview-modes">
+                  {studyModes.map((mode, index) => <li key={mode.title} className={index === 0 ? "preview-mode-selected" : undefined}><mode.icon size={16} /> {mode.title}</li>)}
+                </ul>
+                <p className="preview-label">Exam domains</p>
+                <ul className="preview-domains">
+                  {previewCert.domains.slice(0, 4).map((domain) => <li key={domain.id}><span>{domain.name}</span><span>{domain._count.questions}</span></li>)}
+                </ul>
+              </div>
+            )}
+            <div className="preview-terminal" aria-label={`Lab preview: ${firstLab.title}`}>
+              <div className="preview-terminal-head"><Terminal size={14} /> {firstLab.device} · CCNA lab</div>
+              <pre>{labPreview().map((line) => `${line.prompt} ${line.command}${line.output ? `\n${line.output}` : ""}`).join("\n")}</pre>
+            </div>
+          </div>
         </div>
       </section>
 
-      <footer className="page-footer"><span>© {new Date().getFullYear()} CertMastery</span><span>Independent exam preparation. Not affiliated with CompTIA, Cisco or Splunk. <Link href="/privacy">Privacy</Link></span><Link href="/register">Save your progress <ArrowRight size={14} /></Link></footer>
+      <section className="band" aria-labelledby="pathways-heading">
+        <div className="container">
+          <div className="section-head">
+            <div><p className="eyebrow">Certification pathways</p><h2 id="pathways-heading">Choose where to start</h2><p className="section-lead">Each question bank follows the official exam domains, so you can see exactly what you have covered.</p></div>
+            <Link className="text-link" href="/certifications">All certifications <ArrowRight size={16} /></Link>
+          </div>
+          <div className="cert-grid">
+            {certifications.map((certification) => {
+              const Icon = certificationIcon(certification.slug);
+              const count = questionCount(certification);
+              return (
+                <article className="cert-card" key={certification.id}>
+                  <div className="cert-card-top"><span className="cert-symbol"><Icon size={19} /></span><span className="exam-code">{certification.examCode}</span></div>
+                  <h3>{certification.acronym}</h3>
+                  <p className="cert-name">{certification.name}</p>
+                  <div className="cert-card-footer">
+                    <span>{count} questions · {certification.domains.length} domains</span>
+                    {certification.slug === "ccna" && <span className="tag tag-mint"><Network size={13} /> Labs</span>}
+                  </div>
+                  <Link className="cert-card-cta" href={`/practice/${certification.slug}`}>Start practice <ArrowRight size={16} /><span className="sr-only"> for {certification.acronym}</span></Link>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section className="band band-alt" aria-labelledby="practice-heading">
+        <div className="container split">
+          <div>
+            <p className="eyebrow">Practice tests</p>
+            <h2 id="practice-heading">Three ways to practise</h2>
+            <p className="section-lead">Start with untimed practice, then move to timed exams as your accuracy improves. Every answer is saved to your progress.</p>
+            <Link className="button button-primary" href="/practice">Browse practice tests <ArrowRight size={16} /></Link>
+          </div>
+          <div className="feature-list">
+            {studyModes.map((mode) => <div className="feature-item" key={mode.title}><span className="feature-icon"><mode.icon size={18} /></span><div><h3>{mode.title}</h3><p>{mode.copy}</p></div></div>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="band" aria-labelledby="labs-heading">
+        <div className="container split split-reverse">
+          <div>
+            <p className="eyebrow">Hands-on labs</p>
+            <h2 id="labs-heading">Configure it yourself</h2>
+            <p className="section-lead">Guided labs run in a browser-based Cisco IOS simulator. Type the commands, verify the result, and see each task checked off as you go. Completed labs are saved to your progress.</p>
+            <Link className="button button-primary" href="/labs">Open the labs <ArrowRight size={16} /></Link>
+          </div>
+          <div className="lab-feature">
+            {ccnaLabs.map((lab) => (
+              <Link className="lab-feature-card" href={`/labs/${lab.slug}`} key={lab.slug}>
+                <span className="tag tag-mint">{lab.difficulty} · {lab.durationMinutes} min</span>
+                <h3>{lab.title}</h3>
+                <p>{lab.description}</p>
+                <ol>{lab.tasks.map((task) => <li key={task.id}><CheckCircle2 size={15} /> {task.title}</li>)}</ol>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="band band-mint" aria-labelledby="how-heading">
+        <div className="container">
+          <div className="section-head"><div><p className="eyebrow">How CertMastery helps</p><h2 id="how-heading">A clear route to exam day</h2></div></div>
+          <ol className="steps">
+            {steps.map((step, index) => <li className="step" key={step.title}><span className="step-number">{String(index + 1).padStart(2, "0")}</span><step.icon size={20} /><h3>{step.title}</h3><p>{step.copy}</p></li>)}
+          </ol>
+        </div>
+      </section>
+
+      <section className="band" aria-labelledby="cta-heading">
+        <div className="container cta">
+          <div><h2 id="cta-heading">{session?.user ? "Pick up where you left off" : "Start preparing today"}</h2><p>{session?.user ? "Review your weak areas, then take another session." : "Create a free account to practise questions and save your progress."}</p></div>
+          <div className="cta-actions">
+            {session?.user
+              ? <Link className="button button-primary button-large" href="/history"><BarChart3 size={17} /> View my progress</Link>
+              : <Link className="button button-primary button-large" href="/register">Create free account <ArrowRight size={17} /></Link>}
+            <Link className="button button-secondary button-large" href="/certifications">Explore Certifications</Link>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }
