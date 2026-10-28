@@ -41,7 +41,7 @@ function nextStep(records: ProgressRecord[], labs: LabProgress[]): NextStep {
   if (untimed) return { title: `Try a timed ${untimed.acronym} exam`, copy: `Your ${untimed.acronym} accuracy is ${untimed.accuracy}%. A timed session will show how it holds up at exam pace.`, href: `/practice/${untimed.slug}`, action: "Set up a timed exam" };
 
   const openLab = labs.find((lab) => !lab.completedAt);
-  if (openLab) return { title: `Complete the lab: ${openLab.title}`, copy: `A ${openLab.durationMinutes}-minute hands-on exercise in the CCNA switch simulator.`, href: `/labs/${openLab.slug}`, action: "Start lab" };
+  if (openLab) return { title: `Complete the lab: ${openLab.title}`, copy: `A ${openLab.durationMinutes}-minute hands-on exercise in the CCNA network simulator.`, href: `/labs/${openLab.slug}`, action: "Start lab" };
 
   return { title: `Keep ${active[0].acronym} sharp`, copy: `You are at ${active[0].accuracy}% accuracy with no domain below 70%. Another timed session keeps your pacing consistent.`, href: `/practice/${active[0].slug}`, action: "Start a session" };
 }

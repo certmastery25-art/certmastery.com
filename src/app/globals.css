@@ -360,6 +360,11 @@ h1, h2, h3 { color: var(--text); letter-spacing: -.01em; }
 .lab-card-tags span { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border: 1px solid var(--border); border-radius: 99px; color: var(--text-2); background: var(--bg); font-size: 12px; }
 .lab-card-tags .lab-complete-tag { border-color: transparent; color: var(--success); background: var(--success-soft); }
 .lab-card > .button { white-space: nowrap; }
+.labs-progress-summary { margin: -8px 0 4px; color: var(--text-2); font-size: 13px; font-weight: 600; }
+.labs-domain { margin-top: 22px; }
+.labs-domain-heading { margin: 0 0 10px; color: var(--text-2); font-size: 13px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; }
+.lab-card-tags .lab-level-advanced { border-color: transparent; color: var(--warning); background: var(--warning-soft); }
+.lab-card-tags .lab-level-expert { border-color: transparent; color: var(--error); background: var(--error-soft); }
 .labs-signin-note, .labs-coming-soon { margin: 16px 0 0; color: var(--text-2); font-size: 14px; }
 .labs-signin-note a { color: var(--primary); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 .labs-coming-soon { padding-top: 14px; border-top: 1px solid var(--border); }
@@ -377,11 +382,22 @@ h1, h2, h3 { color: var(--text); letter-spacing: -.01em; }
 .lab-task-heading .eyebrow { margin-bottom: 3px; }
 .lab-task-heading h2 { margin: 0; font-size: 17px; font-weight: 650; }
 .lab-device-pill { padding: 4px 9px; border: 1px solid var(--border); border-radius: 99px; color: var(--text-2); background: var(--bg-alt); font-size: 12px; white-space: nowrap; }
-.lab-topology { min-height: 120px; display: flex; align-items: center; justify-content: center; margin: 18px 0; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--bg-alt); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 16px 16px; }
-.lab-topology-device { display: flex; align-items: center; flex-direction: column; gap: 6px; color: var(--text); font-size: 12px; font-weight: 600; }
-.lab-topology-device > span { width: 40px; height: 34px; display: grid; place-items: center; border: 1px solid #b9d9d3; border-radius: var(--radius); color: var(--primary); background: var(--bg); font-size: 11px; font-weight: 700; box-shadow: var(--shadow-sm); }
-.lab-topology-link { display: flex; align-items: center; gap: 6px; min-width: 100px; padding-bottom: 18px; color: var(--text-2); font-family: var(--font-mono); font-size: 11px; }
-.lab-topology-link i { height: 2px; flex: 1; background: var(--primary); opacity: .45; }
+.lab-scenario { margin: 12px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.6; }
+.lab-topology-figure { margin: 16px 0 18px; border: 1px solid var(--border); border-radius: var(--radius); background-color: var(--bg-alt); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 16px 16px; }
+.lab-topology-svg { display: block; width: 100%; height: auto; }
+.topology-link { stroke: var(--primary); stroke-width: 2.5; opacity: .5; }
+.topology-link-serial { stroke-dasharray: 6 4; }
+.topology-port { fill: var(--text-2); font-family: var(--font-mono); font-size: 14px; text-anchor: middle; paint-order: stroke; stroke: var(--bg-alt); stroke-width: 4px; }
+.topology-shape { fill: var(--bg); stroke: #b9d9d3; stroke-width: 1.5; }
+.topology-name { fill: var(--text); font-size: 15px; font-weight: 650; text-anchor: middle; }
+.topology-caption { fill: var(--text-2); font-size: 14px; font-weight: 550; text-anchor: middle; paint-order: stroke; stroke: var(--bg-alt); stroke-width: 4px; }
+.topology-router .topology-shape, .topology-l3switch .topology-shape { stroke: var(--primary); }
+.topology-router .topology-name, .topology-l3switch .topology-name { fill: var(--primary); }
+.topology-l3switch .topology-shape { stroke-width: 2.5; }
+.topology-cloud .topology-shape { fill: var(--mint); stroke-dasharray: 5 3; }
+.topology-hub .topology-shape { stroke-dasharray: 3 3; }
+.topology-locked .topology-shape { fill: var(--error-soft); stroke: var(--error); stroke-dasharray: 4 3; }
+.topology-locked .topology-name { fill: var(--error); }
 .lab-task-list, .lab-progress ol { padding: 0; margin: 0; list-style: none; }
 .lab-task-list { display: flex; flex-direction: column; gap: 10px; }
 .lab-task-list li { display: flex; align-items: flex-start; gap: 10px; color: var(--text); font-size: 14px; line-height: 1.5; }
@@ -402,7 +418,12 @@ h1, h2, h3 { color: var(--text); letter-spacing: -.01em; }
 .lab-terminal-header button { padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); background: var(--bg); font-size: 13px; cursor: pointer; }
 .lab-terminal-header button:hover:not(:disabled) { border-color: var(--border-strong); color: var(--primary); }
 .lab-terminal-header button:disabled { opacity: .5; cursor: not-allowed; }
-.lab-terminal { height: 340px; padding: 16px; overflow: auto; color: var(--text); background: var(--bg-alt); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
+.lab-device-tabs { display: flex; gap: 4px; padding: 8px 12px; overflow-x: auto; border-bottom: 1px solid var(--border); background: var(--bg); }
+.lab-device-tabs button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid var(--border); border-radius: 99px; color: var(--text-2); background: var(--bg); font-family: var(--font-mono); font-size: 12px; font-weight: 600; cursor: pointer; }
+.lab-device-tabs button:hover:not(:disabled) { border-color: var(--border-strong); color: var(--primary); }
+.lab-device-tabs .lab-device-tab-active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.lab-device-tabs button:disabled { opacity: .5; cursor: not-allowed; }
+.lab-terminal { height: 420px; padding: 16px; overflow: auto; color: var(--text); background: var(--bg-alt); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; }
 .terminal-device-label { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px dashed var(--border-strong); color: var(--text-2); font-size: 12px; }
 .terminal-entry { margin: 0 0 8px; }
 .terminal-command { color: var(--text); white-space: pre-wrap; }
@@ -704,7 +725,8 @@ button.admin-link { padding: 0; border: 0; background: none; cursor: pointer; }
   .lab-card { grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding: 16px 14px; }
   .lab-card > .button { grid-column: 2; justify-self: start; }
   .lab-instructions { padding: 16px; }
-  .lab-terminal { height: 300px; padding: 12px; font-size: 12.5px; }
+  .lab-terminal { height: 320px; padding: 12px; font-size: 12.5px; }
+  .topology-port { fill: var(--text-2); font-family: var(--font-mono); font-size: 15px; text-anchor: middle; paint-order: stroke; stroke: var(--bg-alt); stroke-width: 4px; }
   .lab-domain-link { align-items: flex-start; flex-direction: column; }
   .auth-aside { padding: 32px var(--gutter); }
   .auth-aside h1 { font-size: 26px; }

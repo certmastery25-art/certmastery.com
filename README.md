@@ -40,7 +40,12 @@ Schema changes go through Prisma migrations in `prisma/migrations`: edit the sch
 
 ## Hands-on labs
 
-`/labs` currently offers a guided CCNA Network Access lab in a browser-based Cisco IOS command simulator. The simulator supports a deliberately limited set of VLAN and access-port commands; it does not run arbitrary shell commands or connect to network devices. Learners can use it without an account, while signed-in learners have verified lab completions saved to their account. The server replays the submitted command history through the same simulator and only records completion when the required configuration and verification command are present.
+`/labs` offers 11 CCNA 200-301 v1.1 labs, from a single VLAN to multi-device scenarios covering trunking, EtherChannel, Rapid PVST+, IPv6, OSPF (build and troubleshoot), HSRP, DHCP/NAT/NTP, ACLs with SSH, and Layer 2 security. They run in a browser-based Cisco IOS simulator in `src/lib/labs/engine`; it never runs shell commands or connects to real devices.
+
+- `engine/` models devices, cabling and the CLI (IOS abbreviations, `?` help, `do`, `| include/section`). It computes DTP, EtherChannel, spanning tree, OSPF adjacencies and SPF, routing tables, HSRP elections, DHCP, NAT, ACLs, port security, DHCP snooping and DAI from the topology. Packets are forwarded hop by hop, so `ping`, `tracert`, `curl` and `ssh` reflect the real configuration.
+- `ccna/` defines each lab: devices, cabling, diagram layout, a bootstrap configuration (some deliberately broken), and tasks. Tasks check network behaviour, such as reachability or adjacency, rather than exact command text, so any valid configuration passes. Verification tasks also require the learner to run a specific command while the network is in the right state.
+
+Learners need an account to open a lab. Sessions are kept in browser storage, and completions are saved per account. The server replays the submitted command history through the same simulator and only records a completion when every task passes.
 
 ## Deploy to Cloudflare Workers
 

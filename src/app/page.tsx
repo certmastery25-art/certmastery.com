@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { ArrowRight, BarChart3, BookOpenCheck, CheckCircle2, Clock3, ListChecks, Network, SlidersHorizontal, Target, Terminal } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { certificationIcon } from "@/lib/cert-icons";
-import { ccnaLabs, initialCcnaLabState, promptForMode, runCcnaLabCommand } from "@/lib/labs/ccna";
+import { ccnaLabs, createLabState, promptForState, runLabCommand } from "@/lib/labs/ccna";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -26,12 +26,15 @@ const steps = [
   { icon: Target, title: "Focus on weak areas", copy: "Your progress page highlights the domains that need another session." },
 ];
 
+const featuredLabSlugs = ["inter-vlan-routing-router-on-a-stick", "single-area-ospfv2-dr-election-and-default-route", "port-security-dhcp-snooping-and-dai"];
+
 // Runs the real simulator so the preview always matches what learners see in the lab.
 function labPreview() {
-  let state = initialCcnaLabState;
+  const lab = ccnaLabs[0];
+  let state = createLabState(lab);
   return ["enable", "configure terminal", "vlan 20", "name SALES"].map((command) => {
-    const prompt = promptForMode(state.mode);
-    const result = runCcnaLabCommand(state, command);
+    const prompt = promptForState(state);
+    const result = runLabCommand(lab, state, command);
     state = result.state;
     return { prompt, command, output: result.output };
   });
@@ -150,16 +153,16 @@ export default async function Home() {
           <div>
             <p className="eyebrow">Hands-on labs</p>
             <h2 id="labs-heading">Configure it yourself</h2>
-            <p className="section-lead">Guided labs run in a browser-based Cisco IOS simulator. Type the commands, verify the result, and see each task checked off as you go. Completed labs are saved to your progress.</p>
+            <p className="section-lead">{ccnaLabs.length} CCNA v1.1 labs run in a browser-based Cisco IOS simulator with multiple routers, switches and hosts. Configure, troubleshoot and verify, and see each task checked off as the network responds. Completed labs are saved to your progress.</p>
             <Link className="button button-primary" href="/labs">Open the labs <ArrowRight size={16} /></Link>
           </div>
           <div className="lab-feature">
-            {ccnaLabs.map((lab) => (
+            {ccnaLabs.filter((lab) => featuredLabSlugs.includes(lab.slug)).map((lab) => (
               <Link className="lab-feature-card" href={`/labs/${lab.slug}`} key={lab.slug}>
                 <span className="tag tag-mint">{lab.difficulty} · {lab.durationMinutes} min</span>
                 <h3>{lab.title}</h3>
                 <p>{lab.description}</p>
-                <ol>{lab.tasks.map((task) => <li key={task.id}><CheckCircle2 size={15} /> {task.title}</li>)}</ol>
+                <ol>{lab.tasks.slice(0, 6).map((task) => <li key={task.id}><CheckCircle2 size={15} /> {task.title}</li>)}</ol>
               </Link>
             ))}
           </div>
