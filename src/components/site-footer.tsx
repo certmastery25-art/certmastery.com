@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CONTACT_EMAIL } from "@/lib/site";
 
 export function SiteFooter() {
   return (
@@ -16,7 +15,7 @@ export function SiteFooter() {
         <nav className="site-footer-links" aria-label="Footer">
           <div><strong>Learn</strong><Link href="/certifications">Certifications</Link><Link href="/practice">Practice tests</Link><Link href="/labs">Hands-on labs</Link></div>
           <div><strong>Account</strong><Link href="/history">My progress</Link><Link href="/login">Sign in</Link><Link href="/register">Create free account</Link></div>
-          <div><strong>About</strong><Link href="/privacy">Privacy</Link><a href={`mailto:${CONTACT_EMAIL}`}>Contact</a></div>
+          <div><strong>About</strong><Link href="/privacy">Privacy</Link><Link href="/contact">Contact</Link></div>
         </nav>
       </div>
       <div className="container site-footer-legal">

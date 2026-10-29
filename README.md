@@ -58,6 +58,7 @@ This is a full-stack Next.js app, so deploy it to **Cloudflare Workers** with th
    - `NEXTAUTH_URL`: your deployed URL, such as `https://cert-mastery.<your-subdomain>.workers.dev`.
    - `NEXTAUTH_SECRET`: a unique, long random secret for this deployment.
    - Optional Google OAuth: `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+   - Contact form: `RESEND_API_KEY` and `CONTACT_FROM_EMAIL` (see below).
 4. For Google sign-in, set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED="true"` as a Worker variable and add `https://<your-domain>/api/auth/callback/google` to the OAuth client's authorized redirect URIs.
 
 Use a separate Neon database for preview deployments. Do not commit database credentials or `.dev.vars`.
@@ -93,6 +94,12 @@ npm run db:seed-dev
 `db:seed-dev` adds fake users, quiz activity, and analytics events, plus `admin@example.test` / `admin-pass-123` (admin) and `student@example.test` / `student-pass-123`. It refuses to run unless `DATABASE_URL` is the local database. Delete `.env.local` before building for production, because OpenNext embeds `.env*` values in the bundle.
 
 To test the Worker and its cron locally: `npm run cf:build`, then `npx wrangler dev --test-scheduled` and open `http://localhost:8787/__scheduled?cron=15+3+*+*+*`.
+
+## Contact form
+
+`/contact` lists the phone number, email address and location from `src/lib/site.ts`, and its form posts to `/api/contact`. The route validates the input, drops submissions that fill a hidden honeypot field, and emails the message as plain text to every address in `CONTACT_FORM_RECIPIENTS` through the [Resend](https://resend.com) HTTP API, with the sender's address as the reply-to.
+
+Set `RESEND_API_KEY` and `CONTACT_FROM_EMAIL` as Worker secrets. Without a verified domain, Resend only sends from `onboarding@resend.dev` to the email address that owns the Resend account, so sign up with the `CONTACT_EMAIL` address and use `CertMastery <onboarding@resend.dev>`. After verifying a domain in Resend, switch to an address on that domain. Until both are set, the form returns an error that asks visitors to email `CONTACT_EMAIL` directly.
 
 ## Analytics and admin dashboard
 
