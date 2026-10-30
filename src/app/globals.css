@@ -654,6 +654,10 @@ button.admin-link { padding: 0; border: 0; background: none; cursor: pointer; }
 }
 
 /* ---------- Tablet ---------- */
+@media (max-width: 1200px) {
+  .header-inner { gap: 24px; }
+  .main-nav { gap: 20px; }
+}
 @media (max-width: 1080px) {
   .header-inner { gap: 20px; }
   .menu-toggle { display: grid; }

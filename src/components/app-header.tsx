@@ -13,6 +13,7 @@ const links = [
   { href: "/practice", label: "Practice tests" },
   { href: "/labs", label: "Hands-on labs" },
   { href: "/history", label: "My progress" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function AppHeader() {
