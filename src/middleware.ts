@@ -19,7 +19,7 @@ function isAccountOnlyPath(pathname: string) {
 // Browsers always send Origin on cross-site POSTs, so NSE writes from other sites can be refused outright.
 function isCrossSiteNseWrite(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (["GET", "HEAD", "OPTIONS"].includes(request.method) || !(pathname.startsWith("/api/nse/") || pathname.startsWith("/api/nse-studio/"))) return false;
+  if (["GET", "HEAD", "OPTIONS"].includes(request.method) || !pathname.startsWith("/api/nse/")) return false;
   const origin = request.headers.get("origin");
   if (!origin) return false;
   try {

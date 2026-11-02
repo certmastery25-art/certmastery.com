@@ -24,9 +24,7 @@ export function AppHeader() {
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  const navLinks = session?.user.role === "ADMIN"
-    ? [...links, { href: "/admin", label: "Admin" }, { href: "/studio", label: "NSE Studio" }]
-    : session?.user.role === "CONTENT_EDITOR" ? [...links, { href: "/studio", label: "NSE Studio" }] : links;
+  const navLinks = session?.user.role === "ADMIN" ? [...links, { href: "/admin", label: "Admin" }] : links;
 
   return (
     <header className="app-header">

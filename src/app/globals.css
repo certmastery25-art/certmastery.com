@@ -821,7 +821,7 @@ button.admin-link { padding: 0; border: 0; background: none; cursor: pointer; }
 .nse-card h2 { font-size: 17px; }
 .nse-card h3 { margin-top: 14px; font-size: 14px; }
 .nse-card p { margin: 0 0 10px; font-size: 14px; }
-.nse-check-list, .nse-plain-list, .nse-lab-links, .nse-module-list, .nse-studio-list { padding: 0; margin: 0; list-style: none; }
+.nse-check-list, .nse-plain-list, .nse-lab-links, .nse-module-list { padding: 0; margin: 0; list-style: none; }
 .nse-check-list li { display: flex; gap: 8px; margin-bottom: 8px; }
 .nse-check-list svg { flex: none; margin-top: 4px; color: var(--primary); }
 .nse-plain-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; font-size: 14px; }
@@ -939,23 +939,6 @@ button.admin-link { padding: 0; border: 0; background: none; cursor: pointer; }
 .nse-breakdown dd { margin: 0; font-weight: 650; }
 .nse-empty { min-height: 200px; }
 .nse-history-link { margin: -16px 0 24px; }
-.nse-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 16px 0 20px; border-bottom: 1px solid var(--border); }
-.nse-tabs button { padding: 8px 12px; border: 0; border-bottom: 2px solid transparent; background: none; cursor: pointer; }
-.nse-tab-on { border-bottom-color: var(--primary) !important; color: var(--primary); font-weight: 650; }
-.nse-form { display: flex; flex-direction: column; gap: 12px; }
-.nse-form-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-bottom: 12px; }
-.nse-form-row > * { flex: 1 1 150px; }
-.nse-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; }
-.nse-textarea { height: auto; font-family: var(--font-mono); font-size: 13px; line-height: 1.5; resize: vertical; }
-.nse-check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-.nse-options-edit { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); }
-.nse-option-edit { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.nse-link-button { padding: 0; border: 0; background: none; color: var(--primary); cursor: pointer; text-align: left; }
-.nse-link-button:hover { text-decoration: underline; }
-.nse-studio-list { margin-bottom: 14px; }
-.nse-studio-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-.nse-studio-list span { color: var(--text-2); font-size: 13px; }
-.nse-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; font-size: 14px; }
 @media (max-width: 960px) {
   .nse-hero, .nse-pathway-grid, .nse-exam-layout, .nse-lab-workspace, .nse-dash-columns { grid-template-columns: minmax(0, 1fr); }
   .nse-core-steps, .nse-track-grid { grid-template-columns: repeat(2, 1fr); }

@@ -276,40 +276,12 @@ test("module progress, lab completion and readiness update; readiness needs two 
   assert.match(dashboard, /How readiness is calculated/);
 });
 
-test("studio: students are refused, editors can't publish, admins can", async () => {
-  const { client: student } = await user("student");
-  assert.equal((await student.fetch("/studio")).status, 404);
-  assert.equal((await student.fetch("/api/nse-studio/questions")).status, 404);
-  assert.equal((await student.post("/api/nse-studio/import", [])).status, 404);
-
-  const module = await prisma.nseModule.findFirstOrThrow({ where: { slug: "threats" } });
-  const question = { moduleId: module.id, type: "SINGLE", difficulty: "BEGINNER", prompt: `e2e-${run} studio question`, explanation: "Because", technology: "Test", topic: "Test", status: "DRAFT", options: [{ label: "A", text: "a", rationale: "ra", isCorrect: true }, { label: "B", text: "b", rationale: "rb", isCorrect: false }] };
-
-  const { client: editor } = await user("editor", "CONTENT_EDITOR");
-  assert.equal((await editor.fetch("/studio")).status, 200);
-  assert.equal((await editor.fetch("/admin")).status, 404, "editors don't get the analytics area");
-  const created = await editor.post("/api/nse-studio/questions", question);
-  assert.equal(created.status, 201);
-  const { id } = await created.json();
-  assert.equal((await editor.post(`/api/nse-studio/questions/${id}`, { ...question, status: "PUBLISHED" }, "PUT")).status, 403);
-  assert.equal((await editor.post("/api/nse-studio/questions", { ...question, status: "PUBLISHED" })).status, 403);
-  assert.equal((await editor.post("/api/nse-studio/questions", { ...question, options: question.options.map((option) => ({ ...option, isCorrect: false })) })).status, 400, "validation");
-
+test("the studio is gone, and editors don't get the analytics area", async () => {
   const { client: admin } = await user("admin", "ADMIN");
-  assert.equal((await admin.post(`/api/nse-studio/questions/${id}`, { ...question, status: "PUBLISHED", prompt: `e2e-${run} edited` }, "PUT")).status, 200);
-  assert.equal((await prisma.nseQuestion.findUniqueOrThrow({ where: { id } })).status, "PUBLISHED");
-
-  const bad = await admin.post("/api/nse-studio/import", [question, { ...question, options: [] }]);
-  assert.equal(bad.status, 400);
-  assert.equal(await prisma.nseQuestion.count({ where: { prompt: `e2e-${run} studio question` } }), 0, "a bad import adds nothing");
-  const imported = await admin.post("/api/nse-studio/import", [{ ...question, status: "PUBLISHED", prompt: `e2e-${run} imported` }]);
-  assert.equal(imported.status, 201);
-  assert.equal((await prisma.nseQuestion.findFirstOrThrow({ where: { prompt: `e2e-${run} imported` } })).status, "DRAFT", "imports always start as drafts");
-
-  const pathway = await prisma.nsePathway.findUniqueOrThrow({ where: { slug: "nse-1" } });
-  const { id: _id, createdAt: _c, updatedAt: _u, sourcesCheckedAt: _s, ...fields } = pathway;
-  assert.equal((await admin.post(`/api/nse-studio/pathways/${pathway.id}`, { ...fields, mockQuestions: pathway.mockQuestions }, "PUT")).status, 200);
-  assert.equal((await admin.fetch("/studio")).status, 200);
+  assert.equal((await admin.fetch("/studio")).status, 404);
+  assert.equal((await admin.fetch("/api/nse-studio/questions")).status, 404);
+  const { client: editor } = await user("editor", "CONTENT_EDITOR");
+  assert.equal((await editor.fetch("/admin")).status, 404);
 });
 
 test("cross-site writes are refused, and exam starts are rate limited", async () => {
