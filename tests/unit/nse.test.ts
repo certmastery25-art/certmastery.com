@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { nsePathways, toOptions } from "../../prisma/nse/content";
 import { nseLabs } from "../../prisma/nse/labs";
+import { foundationBank } from "../../prisma/nse/practice/foundation";
+import { nse45Bank } from "../../prisma/nse/practice/nse4-5";
+import { nse67Bank } from "../../prisma/nse/practice/nse6-7";
 import { gradeResponse, isResponseShapeValid, toPublicQuestion, type GradableOption } from "../../src/lib/nse/grading";
 import { createLabState, executeLabLine, isTaskComplete, labDefinitionSchema, replayTranscript } from "../../src/lib/nse/lab-engine";
 import { calculateReadiness } from "../../src/lib/nse/readiness";
@@ -52,12 +55,11 @@ test("the public question contains nothing that reveals the answer", () => {
 
 test("seed content is complete and well formed", () => {
   const prompts = new Set<string>();
-  assert.equal(nsePathways.length, 16);
+  assert.equal(nsePathways.length, 17);
   for (const pathway of nsePathways) {
     assert.ok(pathway.modules.length > 0, pathway.slug);
     assert.ok(pathway.officialExams.length > 0, pathway.slug);
     for (const module of pathway.modules) {
-      assert.ok(module.notes.length > 300, `${module.slug} needs real notes`);
       assert.ok(module.objectives.length > 0 && module.concepts.length > 0 && module.sources.length > 0, module.slug);
       assert.ok(module.questions.length >= 2, `${module.slug} needs questions`);
       for (const question of module.questions) {
@@ -72,6 +74,16 @@ test("seed content is complete and well formed", () => {
         if (type === "ORDERING") assert.ok(question.a.every((row) => row.length === 2), question.p);
       }
     }
+  }
+});
+
+test("practice questions don't give away the answer by position, and options are distinct", () => {
+  const practice = Object.values({ ...foundationBank, ...nse45Bank, ...nse67Bank }).flat().filter((question) => question.c?.length === 1);
+  assert.ok(practice.length > 300);
+  assert.ok(practice.filter((question) => question.c![0] === 0).length < practice.length * 0.4);
+  for (const pathway of nsePathways) for (const module of pathway.modules) for (const question of module.questions) {
+    const texts = toOptions(question).map((item) => item.text);
+    assert.equal(new Set(texts).size, texts.length, question.p);
   }
 });
 

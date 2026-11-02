@@ -112,7 +112,7 @@ test("public pages: landing, every pathway and module load, and CompTIA and Cisc
   assert.match(landing, /Fortinet NSE Certification Academy/);
   assert.match(landing, /Master Fortinet/);
   const pathways = await prisma.nsePathway.findMany({ include: { modules: true } });
-  assert.equal(pathways.length, 16);
+  assert.equal(pathways.length, 17);
   for (const track of ["SECURE_NETWORKING", "SECURITY_OPERATIONS", "SASE", "CLOUD_SECURITY"] as const) {
     for (const level of [5, 6, 7]) assert.ok(pathways.some((pathway) => pathway.level === level && pathway.track === track), `NSE ${level} ${track}`);
   }
@@ -121,7 +121,9 @@ test("public pages: landing, every pathway and module load, and CompTIA and Cisc
     const module = pathway.modules[0];
     const page = await client.fetch(`/fortinet/${pathway.slug}/${module.slug}`);
     assert.equal(page.status, 200, module.slug);
-    assert.match(await page.text(), /Study notes/);
+    const text = await page.text();
+    assert.match(text, /Practise this topic/);
+    assert.doesNotMatch(text, /Study notes/);
   }
   assert.equal((await client.fetch("/fortinet/labs")).status, 200);
   assert.equal((await client.fetch("/fortinet/no-such-pathway")).status, 404);
@@ -200,7 +202,7 @@ test("timer is enforced by the server, including auto-submission", async () => {
 test("practice reveals after an answer and first answer is final; all question types grade correctly", async () => {
   const { client } = await user("practice");
   const seen = new Set<string>();
-  const attemptId = await startExam(client, { pathway: "nse-4", mode: "PRACTICE", count: 30 });
+  const attemptId = await startExam(client, { pathway: "nse-2", mode: "PRACTICE", count: 30 });
   const first = await (await client.fetch(`/api/nse/exams/${attemptId}?index=0`)).json();
   for (let index = 0; index < first.attempt.totalQuestions; index += 1) {
     const before = await (await client.fetch(`/api/nse/exams/${attemptId}?index=${index}`)).text();
@@ -253,7 +255,6 @@ test("unpublished content never reaches students", async () => {
 test("module progress, lab completion and readiness update; readiness needs two exams", async () => {
   const { client, id: userId } = await user("progress");
   const pathway = await prisma.nsePathway.findUniqueOrThrow({ where: { slug: "nse-3" }, include: { modules: true } });
-  assert.equal((await client.post(`/api/nse/modules/${pathway.modules[0].id}/complete`, { completed: true })).status, 200);
 
   const lab = await prisma.nseLab.findUniqueOrThrow({ where: { slug: "firewall-policy" } });
   const definition = lab.definition as { tasks: { commands: string[] }[] };

@@ -135,7 +135,7 @@ export default async function Home() {
             })}
             {pathways.length > 0 && (
               <article className="cert-card">
-                <div className="cert-card-top"><span className="cert-symbol"><ShieldCheck size={19} /></span><span className="exam-code">NSE 1 to 7</span></div>
+                <div className="cert-card-top"><span className="cert-symbol"><ShieldCheck size={19} /></span><span className="exam-code">NSE 1 to 8</span></div>
                 <h3>Fortinet NSE</h3>
                 <p className="cert-name">Fortinet NSE Certification Academy</p>
                 <div className="cert-card-footer">

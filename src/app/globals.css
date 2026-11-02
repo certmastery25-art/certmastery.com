@@ -817,6 +817,8 @@ button.admin-link { padding: 0; border: 0; background: none; cursor: pointer; }
 .nse-pathway-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; align-items: start; }
 .nse-pathway-side { display: flex; flex-direction: column; gap: 14px; }
 .nse-page .nse-pathway-side section { margin: 0; }
+.nse-expert-step { grid-template-columns: minmax(0, 1fr) !important; margin-top: 12px; }
+.nse-start + .nse-start { margin-top: 8px; }
 .nse-card { padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); }
 .nse-card h2 { font-size: 17px; }
 .nse-card h3 { margin-top: 14px; font-size: 14px; }
@@ -835,16 +837,9 @@ button.admin-link { padding: 0; border: 0; background: none; cursor: pointer; }
 .nse-exam-option h3 { margin-top: 0; }
 .nse-flagged-note { padding: 8px 10px; border-radius: var(--radius); color: var(--warning); background: var(--warning-soft); }
 .nse-next { width: 100%; }
-.nse-notes { max-width: 72ch; }
-.nse-notes h3 { margin: 24px 0 8px; font-size: 17px; }
-.nse-notes li { margin-bottom: 4px; }
-.nse-notes ul, .nse-notes ol { padding-left: 22px; }
-.nse-notes ul { list-style: disc; }
-.nse-notes ol { list-style: decimal; }
-.nse-notes p { margin: 0 0 12px; }
-.nse-notes code, .nse-card code, .nse-expected code { padding: 1px 4px; border-radius: var(--radius-sm); background: var(--bg-alt); font-family: var(--font-mono); font-size: .92em; }
-.nse-notes pre, .nse-exhibit, .nse-task-list pre { max-width: 100%; padding: 12px 14px; margin: 0 0 14px; overflow-x: auto; border-radius: var(--radius); color: #e6f3f0; background: #17302b; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; }
-.nse-notes pre code, .nse-exhibit code, .nse-task-list pre code { padding: 0; color: inherit; background: none; }
+.nse-card code, .nse-expected code { padding: 1px 4px; border-radius: var(--radius-sm); background: var(--bg-alt); font-family: var(--font-mono); font-size: .92em; }
+.nse-exhibit, .nse-task-list pre { max-width: 100%; padding: 12px 14px; margin: 0 0 14px; overflow-x: auto; border-radius: var(--radius); color: #e6f3f0; background: #17302b; font-family: var(--font-mono); font-size: 13px; line-height: 1.55; }
+.nse-exhibit code, .nse-task-list pre code { padding: 0; color: inherit; background: none; }
 .nse-table-wrap { margin-bottom: 14px; overflow-x: auto; }
 .nse-page table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .nse-page th, .nse-page td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }

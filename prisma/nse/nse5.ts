@@ -21,20 +21,6 @@ export const nse5Pathways: SeedPathway[] = [
       {
         slug: "fortiswitch", title: "FortiSwitch and FortiLink", summary: "Managing switching from FortiGate.", weight: 33,
         objectives: ["Explain FortiLink management", "Create VLANs and assign ports", "Describe switch redundancy options"],
-        notes: `### FortiLink
-In FortiLink mode, a FortiGate manages FortiSwitch units as an extension of itself: VLANs are FortiGate interfaces and ports are configured from the FortiGate's switch controller.
-
-A FortiGate interface is designated with \`set fortilink enable\`. Discovered switches must be **authorised** before they carry managed configuration. Check them with:
-\`\`\`
-execute switch-controller get-conn-status
-\`\`\`
-The managed switch's entry lives under \`config switch-controller managed-switch\`.
-
-### VLANs and policy
-Create a VLAN on the FortiLink interface and assign it to a port's native VLAN or allowed VLANs. Traffic between VLANs is routed through the FortiGate, so firewall policies apply. Traffic within one VLAN is switched locally and doesn't reach the policy engine unless you use a specific isolation feature.
-
-### Port security and redundancy
-Common controls: 802.1X, loop protection through STP and storm control. For redundancy, a **FortiLink split interface** or LAG connects to multiple switches, and **MCLAG** peers present a single logical LAG to a downstream device.`,
         concepts: ["FortiLink", "Authorising a switch", "Native VLAN", "Inter-VLAN policy", "MCLAG"], sources: [doc("fortiswitch"), DOCS.fortigate],
         questions: [
           { d: "INTERMEDIATE", topic: "FortiLink", tech: "FortiSwitch", p: "A newly connected FortiSwitch appears on the FortiGate but carries no managed configuration. What is the most likely next step?", a: [["Authorise the switch", "Managed configuration is pushed after authorisation."], ["Replace the FortiGate's licence", "FortiLink management isn't blocked by this."], ["Create a static route to the switch", "FortiLink is a directly connected management link."], ["Enable SD-WAN", "SD-WAN isn't related to switch management."]], c: [0], e: "Discovery alone doesn't bring a switch under management." },
@@ -46,19 +32,6 @@ Common controls: 802.1X, loop protection through STP and storm control. For redu
       {
         slug: "secure-wireless", title: "Secure wireless LAN", summary: "FortiAP management, SSIDs and rogue AP control.", weight: 33,
         objectives: ["Explain FortiAP management with CAPWAP", "Choose tunnel or bridge SSIDs", "Secure wireless access"],
-        notes: `### FortiAP management
-A FortiGate (or cloud service) controls FortiAP units using **CAPWAP**, on UDP 5246 for control and UDP 5247 for data. Discovered APs must be authorised, and they get their settings from an **FortiAP profile** (\`wtp-profile\`).
-
-### SSID modes
-- **Tunnel:** client traffic returns to the FortiGate over CAPWAP. It's simple to apply policy centrally.
-- **Bridge:** client traffic exits locally at the AP onto the wired network. It reduces the load on the FortiGate, but the local network must carry it and inspection requires traffic to pass through the firewall later.
-- **Mesh:** an AP connects wirelessly back to another AP.
-
-### Security
-Use WPA2-Enterprise or WPA3-Enterprise with RADIUS where users have directory accounts. Open guest networks should use a captive portal and strict isolation from internal resources. **Rogue AP detection** finds unauthorised access points; suppression actively interferes with a device and can have legal implications, so only use it in line with policy.
-
-### RF basics
-Interference and overlapping channels cause many complaints that look like network faults. Check channel plans, 2.4 vs 5/6 GHz coverage, and transmit power before suspecting authentication.`,
         concepts: ["CAPWAP", "Tunnel vs bridge", "wtp-profile", "WPA3-Enterprise", "Rogue AP suppression"], sources: [doc("fortiap"), DOCS.fortigate],
         questions: [
           { d: "INTERMEDIATE", topic: "SSID modes", tech: "FortiAP", p: "A branch has a large file server locally and wants wireless users to reach it without sending traffic back over a slow link to a central controller. Which SSID mode fits best?", a: [["Bridge", "Traffic exits at the AP onto the local network."], ["Tunnel to a remote FortiGate", "All traffic would hairpin across the slow link."], ["Mesh only", "Mesh describes AP backhaul and not local breakout."], ["Captive portal", "This is an authentication method."]], c: [0], e: "The trade-off is that tunnel mode centralises enforcement, while bridge mode favours local traffic." },
@@ -69,20 +42,6 @@ Interference and overlapping channels cause many complaints that look like netwo
       {
         slug: "sdwan-core", title: "SD-WAN core", summary: "Overlay and underlay design and steering.", weight: 34,
         objectives: ["Separate underlay and overlay", "Steer applications using SLAs", "Scale a hub-and-spoke design"],
-        notes: `### Underlay and overlay
-The **underlay** is your transport: internet and MPLS links. The **overlay** is IPsec tunnels built on those links. Most SD-WAN designs route between sites over overlays and use BGP or ADVPN for scale.
-
-### Hub and spoke with ADVPN
-A hub-and-spoke network can send traffic between spokes through the hub. **ADVPN** lets spokes build direct shortcut tunnels on demand for that traffic, reducing hub load and latency.
-
-### Application steering
-Rules can match Internet Service Database entries and application signatures as well as addresses. Application steering may rely on the first packets of a session to identify the application, so a new session may need that information to be learned first.
-
-### Direct internet access
-Branches can send trusted SaaS straight to the internet instead of backhauling it. Security must then be enforced at the branch or in the cloud, so a DIA design is also a security decision.
-
-### Verifying
-Compare \`diagnose sys sdwan service\` with \`diagnose sys session list\`: the first shows which member the rule prefers and the second shows what a session is actually using.`,
         concepts: ["Underlay vs overlay", "ADVPN shortcuts", "Internet Service Database", "Direct internet access"], sources: [DOCS.fortigate],
         questions: [
           { d: "INTERMEDIATE", topic: "Design", tech: "SD-WAN", p: "Spoke-to-spoke voice traffic has high latency because it travels through the hub. Which technology addresses this?", a: [["ADVPN shortcuts", "Spokes build direct on-demand tunnels."], ["Adding more firewall policies on the hub", "Policies don't shorten the path."], ["Certificate inspection", "This has no effect on routing."], ["Turning off the performance SLA", "It removes measurement and doesn't change the path."]], c: [0], e: "ADVPN keeps a simple hub-and-spoke control structure while allowing direct paths for data." },
@@ -109,20 +68,6 @@ Compare \`diagnose sys sdwan service\` with \`diagnose sys session list\`: the f
       {
         slug: "soc-fundamentals", title: "SOC, SIEM and incident response", summary: "How security operations teams work.", weight: 40,
         objectives: ["Explain SIEM functions", "Apply an incident response workflow", "Measure SOC performance"],
-        notes: `### What a SOC does
-A SOC collects security telemetry, detects suspicious activity, investigates it and coordinates a response. Tier 1 usually triages, Tier 2 investigates, and senior analysts hunt threats and improve detection, although team designs vary.
-
-### SIEM concepts
-A SIEM **collects and normalises** logs from many sources and **correlates** them. An example: repeated authentication failures followed by a success for the same account, then an unusual admin action. No single log proves much, but together they tell a story.
-
-### Incident response
-A common lifecycle is **preparation; detection and analysis; containment, eradication and recovery; and post-incident activity**. Don't destroy evidence while containing: isolate a host from the network before wiping it, for example.
-
-### Alert quality
-A **false positive** is an alert on benign activity. A **false negative** is a missed attack, which is more dangerous because nobody knows about it. Tune rules by adding context, not by simply muting them. Teams often track **MTTD** and **MTTR**, mean time to detect and to respond.
-
-### Frameworks
-MITRE ATT&CK describes attacker tactics and techniques. Mapping detections to it reveals coverage gaps.`,
         concepts: ["Normalisation", "Correlation", "IR lifecycle", "False positive vs false negative", "MTTD and MTTR", "MITRE ATT&CK"], sources: [doc("fortianalyzer")],
         questions: [
           { d: "INTERMEDIATE", topic: "Correlation", tech: "SIEM", p: "Which scenario best shows the value of event correlation?", a: [["Many failed logons, then a success, then a new admin account, linked into one incident", "Individually weak signals become meaningful together."], ["Storing a firewall log for one year", "That's retention."], ["Displaying CPU use on a dashboard", "That's monitoring a single value."], ["Sending a daily report of total log volume", "That's reporting without linking activity."]], c: [0], e: "Correlation finds relationships across time and sources." },
@@ -134,20 +79,6 @@ MITRE ATT&CK describes attacker tactics and techniques. Mapping detections to it
       {
         slug: "fortianalyzer-analyst", title: "FortiAnalyzer analysis", summary: "Logs, event handlers, incidents and reports.", weight: 60,
         objectives: ["Navigate logs and ADOMs", "Use event handlers and incidents", "Build reports for the right audience"],
-        notes: `### Log flow
-FortiGate and other Fabric devices send logs to FortiAnalyzer after being authorised. **ADOMs** separate devices and data, for example per customer or business unit. Device logs are generally stored in two forms: compressed raw logs in **archive** and indexed logs in the **analytics** database. A **data policy** sets how long each is kept.
-
-### Investigation views
-**Log View** finds specific entries with filters. **FortiView** summarises top sources, destinations, threats and applications. Start with a time window and narrow by source, then pivot between hosts, users and destinations.
-
-### Event handlers and incidents
-**Event handlers** match logs against conditions and raise **events** in Event Monitor. Analysts can escalate events to **incidents** in FortiSoC, attach evidence and assign owners. Playbooks can automate routine steps, such as enriching data or notifying a team.
-
-### Reports
-Reports use **charts**, **datasets** (SQL queries) and **templates**, and can be scheduled. Pick charts for the reader: an executive needs risk trends, and an analyst needs top offending hosts and details.
-
-### Storage matters
-Check disk quotas per ADOM. When analytics fills up, older logs are deleted according to policy and investigations may lose data.`,
         concepts: ["ADOM", "Analytics vs archive", "Data policy", "Event handler", "FortiSoC incident", "Dataset"], sources: [doc("fortianalyzer")],
         questions: [
           { d: "ADVANCED", topic: "Retention", tech: "FortiAnalyzer", p: "An analyst can see compressed logs from three months ago but cannot search them quickly in FortiView. What is the most likely explanation?", a: [["The logs have aged out of the analytics store but remain in the archive", "Data policy retains the two stores for different periods."], ["FortiGate deleted the logs", "FortiAnalyzer holds its own copy once received."], ["ADOMs block access to old logs", "ADOMs separate data; they don't enforce age."], ["Reports must be disabled first", "Reports don't block queries."]], c: [0], e: "Fast querying depends on indexed analytics data. Older archive logs can be restored into analytics when needed." },
@@ -176,21 +107,6 @@ Check disk quotas per ADOM. When analytics fills up, older logs are deleted acco
       {
         slug: "sase-concepts", title: "SASE and Zero Trust concepts", summary: "Why security moved to the cloud edge.", weight: 40,
         objectives: ["Define SASE components", "Explain ZTNA vs VPN", "Identify use cases"],
-        notes: `### Why SASE
-With users and applications outside the old perimeter, backhauling everything to headquarters adds latency and creates a bottleneck. **SASE** combines networking and security as a cloud-delivered service close to users.
-
-### Components
-- **Secure Web Gateway (SWG):** protects internet access.
-- **CASB:** gives visibility and control over SaaS use.
-- **ZTNA:** gives per-application access based on identity and device posture.
-- **Firewall as a Service:** provides network firewall controls from the cloud.
-- **DLP:** protects sensitive data.
-
-### Zero Trust
-Zero Trust means never assuming trust from network location. Verify identity and device, grant the least access necessary, and keep checking. A traditional VPN typically places a user on a network. **ZTNA** connects a user to one specific application, which reduces lateral movement.
-
-### FortiSASE
-FortiSASE is Fortinet's cloud-delivered service. Remote users connect through FortiClient (agent), or with a browser-based approach using a SWG configuration. Branches can connect using thin edge devices or Secure SD-WAN. Check current FortiSASE documentation, as features move quickly.`,
         concepts: ["SWG", "CASB", "ZTNA", "Least-privilege access", "Device posture", "PoP"], sources: [DOCS.fortisase],
         questions: [
           { d: "INTERMEDIATE", topic: "ZTNA", tech: "ZTNA", p: "How does ZTNA reduce an attacker's options after a user's device is compromised, compared with a traditional full-network VPN?", a: [["The user gets access only to specific applications, rather than a network", "This limits lateral movement."], ["ZTNA encrypts data while traditional VPNs don't", "VPNs encrypt too."], ["ZTNA removes the need for authentication", "Authentication is central to it."], ["ZTNA disables the compromised endpoint automatically", "This isn't inherent to ZTNA, though posture checks can reduce access."]], c: [0], e: "Scope of access is the key difference, and device posture adds a continuing check." },
@@ -201,23 +117,6 @@ FortiSASE is Fortinet's cloud-delivered service. Remote users connect through Fo
       {
         slug: "fortisase-admin", title: "FortiSASE administration", summary: "Connecting users, policies and SD-WAN integration.", weight: 60,
         objectives: ["Choose user connection methods", "Configure security policies for users", "Integrate private access"],
-        notes: `### Connecting remote users
-- **FortiClient agent** provides a tunnel for full traffic steering and gives device information.
-- **SWG mode** uses a proxy configuration in the browser, with no tunnel for other applications.
-
-Agent mode generally gives broader coverage because non-web traffic can also be inspected, while SWG suits unmanaged devices that only need web protection.
-
-### Policy
-FortiSASE policies combine users or groups, destinations, and security profiles such as web filter and antivirus. As with FortiGate, encrypted traffic needs a suitable inspection profile with a trusted CA for deep inspection.
-
-### Private access
-FortiSASE can reach private applications by connecting to a FortiGate SD-WAN hub using overlays (**Secure Private Access**), or through ZTNA connectors. The on-premises side still needs routing and policy for user traffic.
-
-### Identity
-Integrate with an identity provider using SAML, so the same groups drive access decisions and users get single sign-on.
-
-### Thin edge and logging
-Sites can connect using FortiExtender or FortiAP where available. Logs and dashboards help to identify which user, application and policy were involved, and can be forwarded for central retention.`,
         concepts: ["Agent vs SWG", "Secure Private Access", "SAML identity", "Deep inspection with FortiSASE", "Thin edge"], sources: [DOCS.fortisase],
         questions: [
           { d: "ADVANCED", topic: "Connection method", tech: "FortiSASE", p: "A company needs to protect web access for contractors' unmanaged laptops where it can't install software. Which approach fits best?", a: [["SWG mode with a proxy configuration in the browser", "It protects web traffic without an agent."], ["FortiClient agent with a full tunnel", "This requires installing the agent."], ["A site-to-site tunnel from each laptop", "This isn't a laptop use case."], ["A VIP for each contractor", "A VIP does inbound NAT for servers."]], c: [0], e: "The trade-off is coverage: SWG mode is web-focused and offers less device information." },
@@ -245,22 +144,6 @@ Sites can connect using FortiExtender or FortiAP where available. Logs and dashb
       {
         slug: "fortiweb", title: "FortiWeb", summary: "WAF deployment modes and protection.", weight: 40,
         objectives: ["Select a deployment mode", "Build a server policy", "Reduce false positives"],
-        notes: `### Why a WAF
-A network firewall sees that a request is allowed HTTPS. A **web application firewall** reads the HTTP request and looks for attacks such as SQL injection and cross-site scripting, using signatures, protocol rules and, on FortiWeb, machine learning for anomalies.
-
-### Deployment modes
-| Mode | Behaviour |
-| --- | --- |
-| Reverse proxy | Clients connect to FortiWeb's virtual server. Full feature set, including blocking and traffic rewriting. |
-| True transparent proxy | Sits inline without address changes and can block. |
-| Transparent inspection | Inline and asynchronous, so it can't always stop the first malicious request. |
-| Offline protection | Sees a copy of traffic. Mainly used for detection or learning before a live deployment. |
-
-### Server policy
-A **server policy** links a virtual server, a server pool, a protection profile and a certificate if HTTPS is decrypted at FortiWeb.
-
-### Tuning
-Run new protections in **alert only** at first, watch for false positives and build exceptions for specific URLs and parameters. Don't turn off a whole signature class because of one false positive. ML needs time and representative traffic to build a model.`,
         concepts: ["Reverse proxy mode", "Offline protection", "Server policy", "Protection profile", "Alert only"], sources: [doc("fortiweb")],
         questions: [
           { d: "INTERMEDIATE", topic: "Deployment", tech: "FortiWeb", p: "A team needs FortiWeb to block attacks reliably and rewrite HTTP headers. Which mode is the best fit?", a: [["Reverse proxy", "It's in the traffic path and supports the fullest feature set."], ["Offline protection", "It sees a copy and can't reliably stop requests."], ["Transparent inspection", "It's asynchronous and may not stop the first request."], ["A SPAN port on the switch", "This describes a copy of the traffic, not a blocking deployment."]], c: [0], e: "Features like rewriting need FortiWeb to act as a full proxy." },
@@ -271,19 +154,6 @@ Run new protections in **alert only** at first, watch for false positives and bu
       {
         slug: "fortiappsec", title: "FortiAppSec Cloud", summary: "Cloud-delivered application protection.", weight: 30,
         objectives: ["Onboard an application", "Avoid origin bypass", "Compare with on-premises WAF"],
-        notes: `### Service model
-FortiAppSec Cloud delivers application security as a SaaS service. You onboard a domain and change DNS, typically with a CNAME record, so traffic goes through the service to your origin.
-
-### The origin bypass problem
-If attackers learn your origin server's address, they can go directly to it and skip the WAF. Restrict the origin so that it accepts web traffic only from the service, using its published addresses, or an equivalent control.
-
-### Certificates
-For HTTPS inspection, the service needs a certificate for your domain, either one you upload or one it manages, where this option exists.
-
-### Choosing a model
-A cloud service reduces infrastructure work and scales without you managing appliances. An on-premises or VM FortiWeb gives more control over network placement and data path, which may matter for internal applications and data residency.
-
-Always check the current FortiAppSec Cloud documentation, since service names and features have changed over time.`,
         concepts: ["CNAME onboarding", "Origin bypass", "Origin allowlist", "SaaS vs self-managed"], sources: [doc("fortiappsec-cloud"), doc("fortiweb")],
         questions: [
           { d: "ADVANCED", topic: "Origin protection", tech: "FortiAppSec Cloud", p: "An application is onboarded behind a cloud WAF, but attackers still reach it directly at its public IP. What should be done?", a: [["Restrict the origin to accept web traffic only from the WAF service", "This closes the bypass."], ["Change the website's logo", "This has no security effect."], ["Lengthen the DNS TTL", "This doesn't stop direct access to the IP."], ["Disable HTTPS on the origin", "This reduces security and doesn't stop the bypass."]], c: [0], e: "Consider also moving to a new origin address, because the old one is already known." },
@@ -294,24 +164,6 @@ Always check the current FortiAppSec Cloud documentation, since service names an
       {
         slug: "fortiadc", title: "FortiADC", summary: "Load balancing and application delivery.", weight: 30,
         objectives: ["Build a virtual server and pool", "Choose load-balancing methods", "Use health checks and persistence"],
-        notes: `### Core objects
-A client connects to a **virtual server**. FortiADC chooses a **real server** from a **pool** using a load-balancing method, after checking its **health**.
-
-### Methods and persistence
-- **Round robin:** in turn.
-- **Least connections:** the server with the fewest active connections.
-- **Fastest response:** a server responding quickly.
-
-**Persistence** keeps a client with one server, for example with a cookie or source address, when the application keeps session state locally. Source-address persistence can overload a single server when many users sit behind one NAT address.
-
-### Health checks
-Simple checks like ping show a server is up but not that the application works. An HTTP check looking for an expected response code or string is more accurate.
-
-### SSL offload
-Terminating TLS at FortiADC reduces load on servers and makes HTTP inspection and rewriting possible. Re-encrypt to the servers where the network path requires it.
-
-### GSLB
-**Global server load balancing** uses DNS to send users to a healthy or nearby data centre.`,
         concepts: ["Virtual server", "Real server pool", "Least connections", "Persistence", "Application health check", "GSLB"], sources: [doc("fortiadc")],
         questions: [
           { d: "ADVANCED", topic: "Health checks", tech: "FortiADC", p: "A server's application crashes but the server still answers ping, and users keep being sent to it. What should be changed?", a: [["Use an HTTP health check that validates an application response", "This detects application failure."], ["Change the load-balancing method to round robin", "The failed server remains in rotation."], ["Disable persistence only", "The failed server could still be selected."], ["Lower the server's IP TTL", "This doesn't test application health."]], c: [0], e: "Test as close to real application behaviour as you reasonably can." },

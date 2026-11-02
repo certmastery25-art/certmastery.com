@@ -156,7 +156,7 @@ function Results({ attempt, results }: { attempt: Attempt; results: Result[] }) 
           return <div key={row.slug}><Link className="text-link" href={`/fortinet/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link><span>{row.correct}/{row.total} ({value}%)</span><div className="accuracy-track"><span style={{ width: `${value}%` }} /></div></div>;
         })}
       </div>
-      {weak.length > 0 && <div className="nse-recommend"><h2>Study these next</h2><ul>{weak.map((row) => <li key={row.slug}><Link className="text-link" href={`/fortinet/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link></li>)}</ul></div>}
+      {weak.length > 0 && <div className="nse-recommend"><h2>Practise these next</h2><ul>{weak.map((row) => <li key={row.slug}><Link className="text-link" href={`/fortinet/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link></li>)}</ul></div>}
 
       <h2>Review your answers</h2>
       <div className="nse-review-list">

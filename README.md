@@ -34,7 +34,7 @@ Email and password registration/sign-in work locally. Google sign-in is optional
 
 ## Fortinet NSE Academy
 
-`/fortinet` holds the NSE 1 to 7 programme: 16 pathways, study modules, an exam simulator, simulated FortiOS labs and a readiness dashboard.
+`/fortinet` holds the NSE 1 to 8 programme: 17 pathways, practice topics, an exam simulator, simulated FortiOS labs and a readiness dashboard. Add new practice questions to the end of a module's list, because a question's seed key comes from its position.
 
 - **Content** lives in the `Nse*` tables. `prisma/nse/` holds the first batch of original content; `npm run db:seed-nse` inserts whatever is missing and never edits existing rows or other certifications.
 - **Exams** (`/api/nse/exams`) are marked on the server. Correct answers aren't sent until a mock or readiness exam is submitted, or until a practice question is answered. Mock deadlines are enforced by the server.

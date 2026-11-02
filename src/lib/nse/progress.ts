@@ -9,6 +9,7 @@ export const LEVELS = [
   { level: 5, name: "Technical specialisation", kind: "Track" },
   { level: 6, name: "Advanced specialisation", kind: "Track" },
   { level: 7, name: "Architect", kind: "Track" },
+  { level: 8, name: "Cybersecurity Expert", kind: "Expert" },
 ] as const;
 
 export const TRACK_LABELS: Record<string, string> = {
@@ -36,8 +37,7 @@ export type PublishedPathway = Awaited<ReturnType<typeof listPublishedPathways>>
 
 /** Everything here is filtered by userId, which only ever comes from the session. */
 export async function getStudentProgress(userId: string, pathways: PublishedPathway[]) {
-  const [completed, items, exams, labs] = await Promise.all([
-    prisma.nseModuleProgress.findMany({ where: { userId }, select: { moduleId: true } }),
+  const [items, exams, labs] = await Promise.all([
     prisma.nseExamItem.findMany({
       where: { attempt: { userId }, answeredAt: { not: null }, isCorrect: { not: null } },
       orderBy: { answeredAt: "desc" },
@@ -52,7 +52,6 @@ export async function getStudentProgress(userId: string, pathways: PublishedPath
     }),
     prisma.labCompletion.findMany({ where: { userId, labSlug: { startsWith: "nse:" } }, select: { labSlug: true } }),
   ]);
-  const completedModules = new Set(completed.map((row) => row.moduleId));
   const completedLabs = new Set(labs.map((row) => row.labSlug.slice(4)));
   const answers = items.map((item) => ({ moduleId: item.question.moduleId, difficulty: item.question.difficulty, isCorrect: Boolean(item.isCorrect) }));
   const scores = moduleScores(answers);
@@ -70,7 +69,7 @@ export async function getStudentProgress(userId: string, pathways: PublishedPath
     });
     const topics = pathway.modules.map((module) => {
       const score = scores.get(module.id);
-      return { id: module.id, slug: module.slug, title: module.title, completed: completedModules.has(module.id), correct: score?.correct ?? 0, total: score?.total ?? 0, percent: score?.total ? Math.round((score.correct / score.total) * 100) : null };
+      return { id: module.id, slug: module.slug, title: module.title, completed: Boolean(score?.total), correct: score?.correct ?? 0, total: score?.total ?? 0, percent: score?.total ? Math.round((score.correct / score.total) * 100) : null };
     });
     return {
       pathway,
@@ -82,14 +81,14 @@ export async function getStudentProgress(userId: string, pathways: PublishedPath
       answered: topics.reduce((sum, topic) => sum + topic.total, 0),
     };
   });
-  return { byPathway, completedModules, completedLabs, attempts: exams };
+  return { byPathway, completedLabs, attempts: exams };
 }
 
 export function nextActivity(row: Awaited<ReturnType<typeof getStudentProgress>>["byPathway"][number]) {
   const weak = row.topics.filter((topic) => topic.percent !== null && topic.total >= 3).sort((a, b) => a.percent! - b.percent!)[0];
-  if (weak && weak.percent! < 70) return { label: `Revise ${weak.title}: you're on ${weak.percent}%`, href: `/fortinet/${row.pathway.slug}/${weak.slug}` };
-  const unread = row.topics.find((topic) => !topic.completed);
-  if (unread) return { label: `Study ${unread.title}`, href: `/fortinet/${row.pathway.slug}/${unread.slug}` };
+  if (weak && weak.percent! < 70) return { label: `Practise ${weak.title}: you're on ${weak.percent}%`, href: `/fortinet/${row.pathway.slug}/${weak.slug}` };
+  const untried = row.topics.find((topic) => !topic.completed);
+  if (untried) return { label: `Practise ${untried.title}`, href: `/fortinet/${row.pathway.slug}/${untried.slug}` };
   if (row.labsCompleted < row.pathway.labs.length) return { label: "Finish the practical labs", href: "/fortinet/labs" };
   return { label: "Take a timed mock exam", href: `/fortinet/${row.pathway.slug}#exams` };
 }

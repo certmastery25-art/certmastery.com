@@ -19,7 +19,6 @@ export type SeedModule = {
   summary: string;
   weight: number;
   objectives: string[];
-  notes: string;
   concepts: string[];
   exercise?: string;
   sources: string[];

@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Fortinet NSE Certification Academy",
-  description: "Prepare for Fortinet NSE 1 to 7 with original study notes, practice and timed mock exams, readiness tracking and simulated FortiOS labs.",
+  description: "Train for Fortinet NSE 1 to 8 with original practice questions, timed mock exams, readiness tracking and simulated FortiOS labs.",
 };
 
 const TRACKS = [
@@ -25,6 +25,7 @@ const SEQUENCE = [
   { title: "Earn NSE 4", text: "Fortinet requires an active NSE 4 for every level above it." },
   { title: "Choose a track", text: "Pass NSE 5 or NSE 6 in one track. Fortinet doesn't require both." },
   { title: "Become an architect", text: "NSE 7 requires NSE 4 and an NSE 5 or 6 in the same track." },
+  { title: "Reach expert level", text: "NSE 8 adds a practical Core exam and one practical elective, on top of those certifications." },
 ];
 
 const OFFICIAL = [
@@ -58,18 +59,18 @@ export default async function FortinetPage() {
           <p className="eyebrow"><ShieldCheck size={14} /> Fortinet NSE</p>
           <h1>Fortinet NSE Certification Academy</h1>
           <p className="nse-tagline">Master Fortinet. Build Real-World Security Skills. Pass With Confidence.</p>
-          <p>Learn from NSE 1 to NSE 7 with study notes, practice questions, timed mocks and hands-on CLI practice. It&apos;s built around the eight-level programme Fortinet introduced on 15 July 2026.</p>
+          <p>Train from NSE 1 to NSE 8 with practice questions, timed mocks and hands-on CLI practice. It&apos;s built around the eight-level programme Fortinet introduced on 15 July 2026.</p>
           <div className="result-actions"><Link className="button button-primary" href="/fortinet/nse-1">Start at NSE 1 <ArrowRight size={16} /></Link><Link className="button button-secondary" href="/fortinet/nse-4">Go to NSE 4</Link></div>
         </div>
         <dl className="nse-hero-stats">
           <div><dt>Pathways</dt><dd>{pathways.length}</dd></div>
-          <div><dt>Study modules</dt><dd>{moduleCount}</dd></div>
-          <div><dt>Questions so far</dt><dd>{questionCount}</dd></div>
+          <div><dt>Topics</dt><dd>{moduleCount}</dd></div>
+          <div><dt>Practice questions</dt><dd>{questionCount}</dd></div>
           <div><dt>Simulated labs</dt><dd>{labCount}</dd></div>
         </dl>
       </section>
 
-      <p className="nse-independent"><strong>Independent study resource.</strong> CertMastery isn&apos;t affiliated with or endorsed by Fortinet. Questions are original, not real exam questions, and completing them doesn&apos;t guarantee a pass. The question bank is growing and content is awaiting specialist review, so check details against official documentation.</p>
+      <p className="nse-independent"><strong>Independent practice resource.</strong> CertMastery isn&apos;t affiliated with or endorsed by Fortinet. Questions are original, not real exam questions, and completing them doesn&apos;t guarantee a pass. The question bank is growing and content is awaiting specialist review, so check details against official documentation.</p>
 
       {progress && (
         <section className="nse-dash-strip" aria-labelledby="your-progress">
@@ -86,7 +87,7 @@ export default async function FortinetPage() {
             {LEVELS.filter((level) => level.level <= 4).map((level) => {
               const slug = `nse-${level.level}`;
               const percent = pathwayPercent(slug);
-              return <li key={level.level}><Link href={`/fortinet/${slug}`}><span className="nse-level-badge">NSE {level.level}</span><strong>{level.name}</strong>{progress && <span className="nse-mini-track" role="progressbar" aria-label={`NSE ${level.level} modules studied`} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${percent}%` }} /></span>}</Link></li>;
+              return <li key={level.level}><Link href={`/fortinet/${slug}`}><span className="nse-level-badge">NSE {level.level}</span><strong>{level.name}</strong>{progress && <span className="nse-mini-track" role="progressbar" aria-label={`NSE ${level.level} topics practised`} aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${percent}%` }} /></span>}</Link></li>;
             })}
           </ol>
           <div className="nse-track-grid" role="table" aria-label="NSE 5 to 7 by track">
@@ -105,7 +106,8 @@ export default async function FortinetPage() {
               </div>
             ))}
           </div>
-          <p className="nse-out-of-scope">NSE 8 and the OT Security and MSSP Security certifications sit above these levels. They aren&apos;t covered here yet.</p>
+          <ol className="nse-core-steps nse-expert-step"><li><Link href="/fortinet/nse-8"><span className="nse-level-badge">NSE 8</span><strong>Cybersecurity Expert: Core practical</strong></Link></li></ol>
+          <p className="nse-out-of-scope">We cover the NSE 8 Core topics. The NSE 8 electives and the OT Security and MSSP Security certifications aren&apos;t covered here yet.</p>
         </div>
       </section>
 

@@ -45,7 +45,7 @@ async function main() {
           title: seedModule.title,
           summary: seedModule.summary,
           objectives: seedModule.objectives,
-          notes: seedModule.notes,
+          notes: "",
           keyConcepts: seedModule.concepts,
           exercise: seedModule.exercise,
           sources: seedModule.sources,

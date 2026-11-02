@@ -28,11 +28,11 @@ export default async function PathwayPage({ params }: { params: Promise<{ pathwa
   if (!pathway) notFound();
   const session = await getServerSession(authOptions);
   const userId = session?.user.id;
-  const [completed, attempts] = userId ? await Promise.all([
-    prisma.nseModuleProgress.findMany({ where: { userId, moduleId: { in: pathway.modules.map((module) => module.id) } }, select: { moduleId: true } }),
+  const [practised, attempts] = userId ? await Promise.all([
+    prisma.nseExamItem.findMany({ where: { attempt: { userId }, answeredAt: { not: null }, question: { moduleId: { in: pathway.modules.map((module) => module.id) } } }, distinct: ["questionId"], select: { question: { select: { moduleId: true } } } }),
     prisma.nseExamAttempt.findMany({ where: { userId, pathwayId: pathway.id, submittedAt: { not: null } }, orderBy: { submittedAt: "desc" }, take: 5, select: { id: true, mode: true, correctAnswers: true, totalQuestions: true, submittedAt: true } }),
   ]) : [[], []];
-  const done = new Set(completed.map((row) => row.moduleId));
+  const done = new Set(practised.map((row) => row.question.moduleId));
   const total = pathway.modules.reduce((sum, module) => sum + module._count.questions, 0);
   const reviewed = pathway.modules.filter((module) => module.lastReviewedAt).length;
 
@@ -50,7 +50,7 @@ export default async function PathwayPage({ params }: { params: Promise<{ pathwa
           <section><h2>Overview</h2><p>{pathway.overview}</p></section>
           <section><h2>Learning objectives</h2><ul className="nse-check-list">{pathway.objectives.map((objective) => <li key={objective}><CheckCircle2 size={16} /> {objective}</li>)}</ul></section>
           <section aria-labelledby="modules">
-            <h2 id="modules">Syllabus</h2>
+            <h2 id="modules">Practise by topic</h2>
             <ol className="nse-module-list">
               {pathway.modules.map((module, index) => (
                 <li key={module.id}>
@@ -58,7 +58,7 @@ export default async function PathwayPage({ params }: { params: Promise<{ pathwa
                   <div>
                     <h3><Link href={`/fortinet/${pathway.slug}/${module.slug}`}>{module.title}</Link></h3>
                     <p>{module.summary}</p>
-                    <div className="lab-card-tags"><span>{module._count.questions} questions</span><span>Weight {module.weight}</span>{module.productVersion && <span>{module.productVersion}</span>}{done.has(module.id) && <span className="lab-complete-tag"><CheckCircle2 size={13} /> Studied</span>}</div>
+                    <div className="lab-card-tags"><span>{module._count.questions} questions</span><span>Weight {module.weight}</span>{module.productVersion && <span>{module.productVersion}</span>}{done.has(module.id) && <span className="lab-complete-tag"><CheckCircle2 size={13} /> Practised</span>}</div>
                   </div>
                   <ArrowRight size={16} aria-hidden="true" />
                 </li>
@@ -75,10 +75,10 @@ export default async function PathwayPage({ params }: { params: Promise<{ pathwa
 
         <aside className="nse-pathway-side">
           <section id="exams" className="nse-card">
-            <h2>Assess yourself</h2>
-            <div className="nse-exam-option"><h3>Practice</h3><p>10 questions, untimed, with explanations after each answer.</p><StartExam pathway={pathway.slug} mode="PRACTICE" count={10} label="Start practice" signedIn={Boolean(userId)} /></div>
+            <h2>Practise</h2>
+            <div className="nse-exam-option"><h3>Practice</h3><p>Untimed, with the answer and explanation after each question.</p><StartExam pathway={pathway.slug} mode="PRACTICE" count={10} label="10 questions" signedIn={Boolean(userId)} />{total > 10 && <StartExam pathway={pathway.slug} mode="PRACTICE" count={25} label="25 questions" secondary signedIn={Boolean(userId)} />}{total > 25 && <StartExam pathway={pathway.slug} mode="PRACTICE" count={50} label="50 questions" secondary signedIn={Boolean(userId)} />}</div>
             <div className="nse-exam-option"><h3>Timed mock exam</h3><p>Up to {pathway.mockQuestions} questions at the pace of {pathway.mockMinutes} minutes for a full paper. Answers appear only after you submit. Time is scaled to the questions available.</p><StartExam pathway={pathway.slug} mode="MOCK" label="Start mock" secondary signedIn={Boolean(userId)} /></div>
-            <div className="nse-exam-option"><h3>Readiness assessment</h3><p>Untimed, across the whole syllabus. It identifies weak topics and what to study.</p><StartExam pathway={pathway.slug} mode="READINESS" label="Assess readiness" secondary signedIn={Boolean(userId)} /></div>
+            <div className="nse-exam-option"><h3>Readiness assessment</h3><p>Untimed, across the whole syllabus. It identifies your weak topics.</p><StartExam pathway={pathway.slug} mode="READINESS" label="Assess readiness" secondary signedIn={Boolean(userId)} /></div>
             <p className="nse-disclaimer">Mock settings and scores are CertMastery&apos;s own, not Fortinet&apos;s.</p>
           </section>
 

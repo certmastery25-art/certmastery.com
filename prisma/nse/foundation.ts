@@ -20,19 +20,6 @@ export const foundationPathways: SeedPathway[] = [
         summary: "CIA, core terminology and how organisations think about risk.",
         weight: 30,
         objectives: ["Define confidentiality, integrity and availability", "Distinguish threat, vulnerability and risk", "Choose a basic risk treatment"],
-        notes: `### Why security exists
-Security protects things an organisation values: customer records, money, its reputation and its ability to keep working. Every control you will meet in this programme protects one of three properties.
-
-### The CIA triad
-- **Confidentiality:** only the right people can read the data. A leaked customer database is a confidentiality failure.
-- **Integrity:** data can't be changed without detection. A tampered bank transfer amount is an integrity failure.
-- **Availability:** systems work when needed. A hospital locked out of patient records by ransomware has an availability failure, and possibly a confidentiality failure too if data was stolen first.
-
-### Threat, vulnerability, risk
-A **vulnerability** is a weakness, such as unpatched software. A **threat** is something that could exploit it, such as a criminal group. **Risk** combines how likely that is with how much damage it would do. An unpatched server with no internet access and no sensitive data carries less risk than the same flaw on a public payment site.
-
-### Treating risk
-Organisations can **mitigate** (add controls), **transfer** (insurance or a contract), **avoid** (stop the activity) or **accept** (record the decision and live with it). Ignoring a risk nobody has assessed isn't acceptance.`,
         concepts: ["CIA triad", "Threat, vulnerability and risk", "Mitigate, transfer, avoid, accept", "Defence in depth", "Least privilege"],
         sources: [DOCS.training],
         questions: [
@@ -49,26 +36,6 @@ Organisations can **mitigate** (add controls), **transfer** (insurance or a cont
         summary: "Malware, ransomware, phishing and social engineering, and how they work together.",
         weight: 40,
         objectives: ["Describe the main types of malware", "Spot social engineering techniques", "Explain the typical stages of a ransomware attack"],
-        notes: `### Malware families
-- **Virus:** attaches to a file and spreads when that file runs.
-- **Worm:** spreads across networks by itself.
-- **Trojan:** pretends to be useful software.
-- **Ransomware:** encrypts data and demands payment. Many groups also steal data first and threaten to publish it, called double extortion.
-- **Spyware and infostealers:** collect passwords and session data.
-
-### Social engineering
-Attackers target people because people can approve what technology blocks.
-- **Phishing:** bulk fraudulent messages. **Spear phishing** targets a named person using researched details.
-- **Business email compromise:** a message that seems to come from an executive or supplier, often asking for a payment change. It may contain no malware at all.
-- **Pretexting:** an invented story, such as a fake help desk call.
-
-Warning signs include urgency, unusual requests and a request to bypass normal process. The right response is to verify through a separate channel you already trust.
-
-### How attacks unfold
-A typical ransomware attack moves through initial access (often a stolen password, phishing or an unpatched internet-facing system), privilege escalation, lateral movement, data theft and, last of all, encryption. Each earlier stage is a chance to stop it.
-
-### What helps
-Tested offline or immutable backups, MFA, patching, network segmentation and staff who report suspicious messages quickly without fear of blame.`,
         concepts: ["Virus, worm, Trojan", "Double extortion", "Spear phishing", "Business email compromise", "Lateral movement", "Immutable backups"],
         sources: [DOCS.training],
         questions: [
@@ -84,21 +51,6 @@ Tested offline or immutable backups, MFA, patching, network segmentation and sta
         summary: "Authentication, access, firewalls and the shared responsibility model.",
         weight: 30,
         objectives: ["Separate authentication from authorisation", "Explain what a firewall does at a high level", "Apply the shared responsibility model"],
-        notes: `### Identity and access
-**Authentication** proves who you are. **Authorisation** decides what you may do. Multi-factor authentication combines factors of different kinds: something you know, have or are. A password and a security question are both something you know, so together they aren't MFA. **Least privilege** gives each person only the access their job needs.
-
-### Network security basics
-A network is usually divided into zones with different levels of trust. A **firewall** sits between zones and allows or denies traffic according to policy. **Segmentation** keeps a compromise in one zone from spreading freely to another.
-
-### The cloud
-- **IaaS:** you rent virtual servers and networks and manage the operating system upward.
-- **PaaS:** you deploy code; the provider runs the platform.
-- **SaaS:** you use a finished application.
-
-Under the **shared responsibility model**, the provider secures the underlying cloud and the customer stays responsible for what they put in and how they configure it. In every model the customer is responsible for its data and for who has access. Most public cloud breaches involve customer misconfiguration, such as storage made public by mistake.
-
-### Policy and awareness
-Technology follows policy: acceptable use, passwords, incident reporting and data handling. A policy works only when people know it and it is enforced.`,
         concepts: ["Authentication vs authorisation", "MFA factors", "Least privilege", "Segmentation", "IaaS, PaaS, SaaS", "Shared responsibility"],
         sources: [DOCS.training],
         questions: [
@@ -129,19 +81,6 @@ Technology follows policy: acceptable use, passwords, incident reporting and dat
         summary: "Stateless filtering, stateful inspection and application awareness.",
         weight: 35,
         objectives: ["Explain stateful inspection", "Say why port-based rules are no longer enough", "Describe the role of a security policy"],
-        notes: `### Generations of firewall
-- **Packet filter:** checks each packet alone against addresses and ports. It has no memory, so it can't tell a reply from an unsolicited packet.
-- **Stateful firewall:** keeps a session table. When an inside host opens a connection, return traffic matching that session is allowed without a separate rule.
-- **Next generation firewall (NGFW):** stateful inspection plus inspection of what is inside the traffic: applications, known exploits, malware and web destinations.
-
-### Why ports stopped being enough
-A rule that allows TCP 443 allows almost everything on the modern internet: business SaaS, personal file sharing and malware command and control all use it. An NGFW can tell these apart, which lets policy describe business intent such as allowing the CRM while blocking personal file sharing.
-
-### How policy decides
-A firewall evaluates its policies against traffic attributes and takes the action of the first match on most platforms, including FortiGate. Traffic that matches nothing is denied. Good policies are specific, ordered carefully and reviewed.
-
-### Where it sits
-An NGFW commonly sits at the internet edge, between internal segments or in front of data centres and cloud workloads. Fortinet's FortiGate is available as hardware, as a virtual machine and in cloud forms.`,
         concepts: ["Packet filter", "Session table", "Application awareness", "First match", "Implicit deny"],
         sources: [DOCS.fortigate],
         questions: [
@@ -157,21 +96,6 @@ An NGFW commonly sits at the internet edge, between internal segments or in fron
         summary: "IPS, antivirus, web filtering and SSL inspection.",
         weight: 40,
         objectives: ["Choose the service that addresses a given threat", "Explain SSL inspection and its trade-offs", "Describe FortiGuard's role"],
-        notes: `### What each service does
-- **Intrusion prevention (IPS):** detects and blocks attempts to exploit vulnerabilities, using signatures and protocol checks. It can protect a server that can't be patched yet, which is called virtual patching.
-- **Antivirus:** scans files in transit for malware.
-- **Web filtering:** allows or blocks sites by category or URL.
-- **Application control:** identifies and controls applications.
-- **DNS filtering:** blocks a lookup for a known bad domain before any connection is made.
-
-These services need current intelligence. On FortiGate that comes from **FortiGuard** subscriptions.
-
-### The encrypted traffic problem
-Most web traffic is encrypted. A firewall can't scan what it can't read, so malware inside HTTPS passes IPS and antivirus untouched unless the traffic is inspected.
-
-**Deep (full) SSL inspection** has the firewall end the client's TLS session and open a new one to the server, so it can read the traffic in between. It re-signs the server's certificate with a CA that client devices must trust; otherwise users see certificate warnings. **Certificate inspection** reads only the certificate and server name, which can support web filtering but can't see content.
-
-Inspection has real trade-offs: it uses processing power, it can break applications that pin certificates, and privacy or legal rules may require exempting categories such as banking or health.`,
         concepts: ["Virtual patching", "FortiGuard", "Deep inspection", "Certificate inspection", "Inspection exemptions"],
         sources: [DOCS.fortigate],
         questions: [
@@ -187,24 +111,6 @@ Inspection has real trade-offs: it uses processing power, it can break applicati
         summary: "Dividing networks and connecting Fortinet products so they share information.",
         weight: 25,
         objectives: ["Explain the value of internal segmentation", "Describe the Security Fabric at a high level", "Name common Fortinet products and their roles"],
-        notes: `### Segmentation
-A flat network lets an attacker who compromises one laptop reach everything. Segmenting with VLANs and internal firewalls forces traffic between zones through policy and inspection. This addresses **east-west** traffic (inside the network), which an edge firewall handling **north-south** traffic (in and out) never sees.
-
-### Deployment concepts
-A firewall can route between networks (NAT/route mode) or sit in a network as a bridge without changing its addressing (transparent mode). Pairs of firewalls in high availability protect against failure of a single unit.
-
-### The Fortinet Security Fabric
-The Security Fabric connects Fortinet products, and some third-party ones, so they share visibility and can respond together. A FortiGate usually acts as the root of the Fabric.
-
-| Product | Role |
-| --- | --- |
-| FortiGate | Network firewall and SD-WAN |
-| FortiAnalyzer | Centralised logging and analytics |
-| FortiManager | Centralised device management |
-| FortiClient | Endpoint agent |
-| FortiSandbox | Runs suspicious files safely |
-| FortiMail | Email security |
-| FortiWeb | Web application firewall |`,
         concepts: ["East-west vs north-south", "VLAN", "NAT/route vs transparent mode", "Security Fabric root", "FortiAnalyzer and FortiManager"],
         sources: [DOCS.fortigate],
         questions: [
@@ -236,38 +142,6 @@ The Security Fabric connects Fortinet products, and some third-party ones, so th
         weight: 30,
         version: "FortiOS 7.6",
         objectives: ["Configure an interface and its administrative access", "Add a default route", "Back up a configuration safely"],
-        notes: `### Two ways to manage
-The GUI and the CLI manage the same configuration. Use whichever suits you, but learn the CLI's structure, because it reveals how FortiOS is organised.
-
-\`\`\`
-config system interface
-    edit "port1"
-        set alias "WAN"
-        set mode static
-        set ip 203.0.113.2 255.255.255.0
-        set allowaccess ping https
-    next
-end
-\`\`\`
-\`edit\` selects or creates an entry, \`next\` saves it and \`end\` leaves the table. \`allowaccess\` controls which management protocols the FortiGate answers **on that interface**. It doesn't control traffic passing through. Keep HTTP, Telnet and internet-facing administrative access off wherever you can.
-
-### The default route
-\`\`\`
-config router static
-    edit 1
-        set dst 0.0.0.0 0.0.0.0
-        set gateway 203.0.113.1
-        set device "port1"
-    next
-end
-\`\`\`
-Check it with \`get router info routing-table all\`.
-
-### Protecting administration
-Use a named administrator account with MFA, restrict it with **trusted hosts** and give it only the profile it needs.
-
-### Backups
-Back up before every change and firmware upgrade. **Encrypt** backups: they contain sensitive settings. Keep the password safe, because an encrypted backup can't be restored without it.`,
         concepts: ["allowaccess", "edit, next, end", "Default route", "Trusted hosts", "Encrypted backup"],
         exercise: "Do the FortiGate initial configuration lab, then use show system interface to confirm your settings.",
         sources: [DOCS.fortigate],
@@ -286,42 +160,6 @@ Back up before every change and firmware upgrade. **Encrypt** backups: they cont
         weight: 40,
         version: "FortiOS 7.6",
         objectives: ["Create address and service objects", "Read and order firewall policies", "Enable source NAT and verify sessions"],
-        notes: `### Anatomy of a policy
-A firewall policy matches incoming and outgoing interfaces, source, destination, schedule and service, then applies an action.
-
-\`\`\`
-config firewall policy
-    edit 1
-        set name "LAN-to-WAN"
-        set srcintf "port2"
-        set dstintf "port1"
-        set srcaddr "LAN-Net"
-        set dstaddr "all"
-        set action accept
-        set schedule "always"
-        set service "HTTP" "HTTPS" "DNS"
-        set nat enable
-        set logtraffic all
-    next
-end
-\`\`\`
-FortiOS checks policies **from the top of the list down and uses the first match**, regardless of policy ID. The implicit deny, shown as policy 0, catches everything else.
-
-### Common ordering error
-A broad policy placed above a specific one hides it. A "deny social media host" policy beneath an "allow everything" policy never matches. Put specific policies above general ones.
-
-### Objects
-Reusable address and service objects make policies readable. Groups simplify changes. Unused or badly named objects make audits harder.
-
-### Source NAT
-\`set nat enable\` rewrites the source address to the outgoing interface address, which lets private addresses reach the internet. It's commonly forgotten: symptoms are traffic that leaves but never gets a reply.
-
-### Checking your work
-Watch **Logs** and **Policy & Objects** hit counts in the GUI, or use the session table:
-\`\`\`
-diagnose sys session filter dst 198.51.100.10
-diagnose sys session list
-\`\`\``,
         concepts: ["First match", "Policy ID vs sequence", "Implicit deny", "Source NAT", "Session table"],
         exercise: "Do the firewall policy lab and the NAT lab, then move a deny policy above and below the allow policy and reason through what each order does.",
         sources: [DOCS.fortigate],
@@ -339,37 +177,6 @@ diagnose sys session list
         weight: 30,
         version: "FortiOS 7.6",
         objectives: ["Attach security profiles to a policy", "Interpret forward traffic and security logs", "Follow a repeatable troubleshooting order"],
-        notes: `### Profiles do nothing until attached
-A security profile only inspects traffic when an accepting policy references it.
-\`\`\`
-config firewall policy
-    edit 1
-        set utm-status enable
-        set ssl-ssh-profile "certificate-inspection"
-        set av-profile "default"
-        set webfilter-profile "default"
-        set ips-sensor "default"
-        set application-list "default"
-    next
-end
-\`\`\`
-Remember that most inspection can't read encrypted content without deep inspection.
-
-### Logs
-Forward traffic logs show the policy, action and bytes for each session. Security logs show what a profile did. Logging must be enabled per policy, and logging to memory or disk varies by model. A dedicated FortiAnalyzer gives longer retention and reporting.
-
-### Troubleshooting order
-Work from the bottom up and change one thing at a time.
-1. **Physical and interface:** is the link up? \`get system interface physical\`
-2. **Address and route:** does a route exist in both directions?
-3. **Policy:** does the expected policy get hits?
-4. **NAT:** are addresses translated as intended?
-5. **Profiles:** does a block log explain it?
-
-\`execute ping\` and \`execute traceroute\` test reachability from the FortiGate itself. \`diagnose sniffer packet\` shows whether traffic arrives and leaves:
-\`\`\`
-diagnose sniffer packet any "host 10.0.1.25 and icmp" 4
-\`\`\``,
         concepts: ["Profile attachment", "Forward traffic log", "Bottom-up troubleshooting", "execute ping", "diagnose sniffer packet"],
         exercise: "Do the security profiles and troubleshooting labs. Write down what each diagnostic told you before changing anything.",
         sources: [DOCS.fortigate],

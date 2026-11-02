@@ -3,9 +3,19 @@ import { nse4Pathway } from "./nse4";
 import { nse5Pathways } from "./nse5";
 import { nse6Pathways } from "./nse6";
 import { nse7Pathways } from "./nse7";
+import { nse8Pathway } from "./nse8";
+import { foundationBank } from "./practice/foundation";
+import { nse45Bank } from "./practice/nse4-5";
+import { nse67Bank } from "./practice/nse6-7";
 import type { SeedPathway, SeedQuestion } from "./types";
 
-export const nsePathways: SeedPathway[] = [...foundationPathways, nse4Pathway, ...nse5Pathways, ...nse6Pathways, ...nse7Pathways];
+const practiceBank = { ...foundationBank, ...nse45Bank, ...nse67Bank };
+
+// Practice questions go after the originals, because a question's seed key comes from its position.
+export const nsePathways: SeedPathway[] = [...foundationPathways, nse4Pathway, ...nse5Pathways, ...nse6Pathways, ...nse7Pathways].map((pathway) => ({
+  ...pathway,
+  modules: pathway.modules.map((module) => ({ ...module, questions: [...module.questions, ...(practiceBank[`${pathway.slug}/${module.slug}`] ?? [])] })),
+})).concat(nse8Pathway);
 
 const LETTERS = "ABCDEFGHIJKL";
 

@@ -31,7 +31,7 @@ export default async function CertificationsPage() {
       {pathways.map((pathway) => (
         <article className="program-row" key={pathway.id}>
           <div className="program-mark"><ShieldCheck size={24} /></div>
-          <div className="program-main"><div className="program-kicker">Fortinet NSE {pathway.level} <span>·</span> {pathway.modules.length} study modules</div><h2>Fortinet {pathway.title}</h2><p>{pathway.summary}</p><div className="program-domains">{pathway.modules.map((module, index) => <span key={module.id}><small>{index + 1}</small> {module.title}</span>)}</div></div>
+          <div className="program-main"><div className="program-kicker">Fortinet NSE {pathway.level} <span>·</span> {pathway.modules.length} topics</div><h2>Fortinet {pathway.title}</h2><p>{pathway.summary}</p><div className="program-domains">{pathway.modules.map((module, index) => <span key={module.id}><small>{index + 1}</small> {module.title}</span>)}</div></div>
           <div className="program-action"><span>{pathwayQuestionCount(pathway)} questions</span><Link className="button button-primary" href={`/fortinet/${pathway.slug}`}>Start studying <ArrowRight size={16} /></Link>{pathway.labs.length > 0 && <Link className="program-labs-link" href="/fortinet/labs"><FlaskConical size={14} /> Simulated labs</Link>}</div>
         </article>
       ))}

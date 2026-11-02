@@ -23,20 +23,6 @@ export const nse7Pathways: SeedPathway[] = [
       {
         slug: "sdwan-architecture", title: "System configuration and SD-WAN architecture", summary: "HA, Fabric and multi-site SD-WAN design.", weight: 25, version: "FortiOS 7.6",
         objectives: ["Design resilient SD-WAN overlays", "Choose HA modes for the requirement", "Plan Security Fabric roles"],
-        notes: `### Design questions to answer first
-What's the failure you're designing for, what's the recovery time, and which traffic must keep working? SD-WAN, HA and routing all overlap, and a design should explain which one handles which failure.
-
-### Multi-region SD-WAN
-Large designs separate regions with hubs. Regional hubs interconnect and spokes use ADVPN in a region. BGP carries reachability, and BGP on loopback addresses avoids tying sessions to one tunnel. Marking routes with SLA state lets a hub prefer a spoke's healthy overlay, so that return traffic also avoids a failed path.
-
-### FGCP and FGSP
-FGCP creates a single logical cluster with a shared configuration. **FGSP** synchronises sessions between independent peers, which can suit designs where a load balancer or routing distributes traffic. Choose based on who owns the forwarding decision.
-
-### Failure domains
-Two hubs in one rack on one power feed aren't truly redundant. Consider the transport as well: two circuits from one carrier may share a physical path.
-
-### Architecture habit
-State the assumption behind each design choice and how you would test it. A failover that's never been tested is a hope.`,
         concepts: ["BGP on loopback", "ADVPN", "SLA-aware routing", "FGCP vs FGSP", "Failure domains"], sources: [DOCS.fortigate],
         questions: [
           { d: "EXPERT", topic: "Return path", tech: "SD-WAN", p: "A spoke correctly moves new sessions to overlay B when overlay A's SLA fails, but the hub keeps returning traffic over overlay A. What design addition addresses this?", a: [["Signal SLA state to the hub so that its route preference follows healthy overlays", "SLA-aware routing aligns the two directions."], ["Add more SD-WAN rules on the spoke only", "This leaves the hub's choice unchanged."], ["Turn off health checks", "This removes the signal altogether."], ["Replace BGP with static routes on one link", "It reduces adaptability."]], c: [0], e: "SD-WAN rules are local decisions. Unless the other end knows the state, traffic can be asymmetric or broken." },
@@ -47,17 +33,6 @@ State the assumption behind each design choice and how you would test it. A fail
       {
         slug: "central-management", title: "Central management", summary: "FortiManager and FortiAnalyzer at enterprise scale.", weight: 20, version: "FortiManager and FortiAnalyzer 7.6",
         objectives: ["Design ADOM and package structures", "Recover from management failure", "Govern change"],
-        notes: `### ADOM structure
-Too few ADOMs mix unrelated teams and versions; too many duplicate work. Base the structure on administrative boundaries and firmware compatibility. Use global objects and policies only for what's truly universal.
-
-### Scaling packages
-Use per-device mappings and metadata rather than cloning a package per site. Templates (such as SD-WAN, IPsec and CLI templates) create consistent provisioning. Zero-touch provisioning can reduce on-site effort for branches.
-
-### Management plane resilience
-A FortiManager outage should not stop FortiGates forwarding: devices keep their last config. However, you lose central changes in that time. Plan for FortiManager HA, backups and a documented break-glass procedure that covers how local changes will be reconciled afterwards.
-
-### Governance
-Use workflow approval and session lists to separate proposers from approvers. Log what was installed and who installed it. Treat the management platform as a Tier 0 asset because control of it means control of every firewall.`,
         concepts: ["ADOM boundaries", "Per-device mapping", "Provisioning templates", "Break-glass", "Tier 0 management plane"], sources: [DOCS.fortimanager],
         questions: [
           { d: "EXPERT", topic: "Trust", tech: "FortiManager", p: "Why should FortiManager be treated as one of the most sensitive systems in an estate?", a: [["Compromising it could allow malicious configuration on every managed firewall", "This gives it enormous blast radius."], ["It's the only device that forwards traffic", "It doesn't forward traffic."], ["It can't be backed up", "It can."], ["Its logs are all public", "They aren't."]], c: [0], e: "Restrict access with MFA, separate management networks and strong change control." },
@@ -68,14 +43,6 @@ Use workflow approval and session lists to separate proposers from approvers. Lo
       {
         slug: "profiles-at-scale", title: "Security profiles at scale", summary: "Inspection design and performance.", weight: 10, version: "FortiOS 7.6",
         objectives: ["Choose where to inspect", "Measure the effect of inspection", "Handle encrypted traffic exceptions"],
-        notes: `### Where to inspect
-Inspecting everything everywhere wastes capacity, and inspecting nothing leaves risk. Decide where each traffic flow is best inspected: branch, hub, cloud or internal segment. Avoid inspecting the same traffic twice unless you have a reason to.
-
-### Performance
-Published throughput varies greatly with IPS, SSL inspection and packet size. Size using realistic threat protection and SSL inspection figures for the model, not the headline firewall number. Hardware acceleration may not apply to traffic needing proxy-based inspection, and CPU rises as a result.
-
-### Exceptions
-Keep exceptions small, documented and reviewed. Blanket SSL exemptions for large SaaS categories remove inspection of data that may matter. Consider inspection in light of policy, privacy and application compatibility.`,
         concepts: ["Inspection placement", "Threat protection throughput", "Hardware offload", "Exception governance"], sources: [DOCS.fortigate],
         questions: [
           { d: "EXPERT", topic: "Sizing", tech: "Architecture", p: "A proposed FortiGate model has a firewall throughput far above the link speed, but the design requires full SSL inspection with IPS. What should an architect do?", a: [["Size against the published SSL inspection and threat protection figures, using a realistic traffic mix", "Those metrics reflect the actual workload."], ["Approve it because firewall throughput exceeds the link", "This ignores the cost of inspection."], ["Remove the requirement and leave it undocumented", "This hides risk."], ["Use packet size of 1 byte for testing", "This isn't a realistic benchmark."]], c: [0], e: "Inspection features can reduce effective throughput by a large factor." },
@@ -85,22 +52,6 @@ Keep exceptions small, documented and reviewed. Blanket SSL exemptions for large
       {
         slug: "rules-routing", title: "Rules and routing", summary: "OSPF, BGP, policy interaction and multi-layer troubleshooting.", weight: 25, version: "FortiOS 7.6",
         objectives: ["Diagnose OSPF and BGP problems", "Explain route selection across protocols", "Combine routing and policy evidence"],
-        notes: `### Administrative distance
-FortiOS defaults include **connected 0, static 10, eBGP 20, OSPF 110, iBGP 200**. Lower distance wins between sources for the same prefix.
-
-### OSPF
-Neighbours must agree on area, hello and dead timers, authentication, network type and MTU (unless ignored). States to recognise: stuck in **EXSTART/EXCHANGE** often indicates an MTU mismatch, and no neighbour at all may point to mismatched timers, subnets or blocked multicast.
-\`\`\`
-get router info ospf neighbor
-get router info ospf interface
-diagnose ip router ospf all enable
-\`\`\`
-
-### BGP
-\`get router info bgp summary\` shows state. **Idle or Active** means no established session, so check reachability to the peer's address, TCP 179, AS numbers and source interface. A session in Established with 0 prefixes received points to filters or peer advertisement instead. Selection uses attributes such as highest weight (a local Fortinet/Cisco convention), local preference, AS path length and MED.
-
-### Bringing it together
-A packet needs a route, reverse path validity and a policy. Asymmetric routing causes RPF drops or sessions that fail stateful checks. Treat logs, sniffer and debug flow as evidence and locate exactly where the packet stops.`,
         concepts: ["Administrative distance", "OSPF EXSTART", "BGP Active", "Local preference", "Asymmetric routing"], exercise: "Do the OSPF lab and write out which output proves each conclusion.", sources: [DOCS.fortigate],
         questions: [
           { d: "ADVANCED", topic: "OSPF", tech: "OSPF", p: "What's the most likely cause of this OSPF state?", x: "FGT # get router info ospf neighbor\nNeighbor ID  Pri  State         Dead Time  Address    Interface\n10.0.0.2     1    Exstart/DR    00:00:36   10.1.1.2   port3", a: [["An interface MTU mismatch", "EXSTART problems commonly come from an MTU mismatch in DBD exchange."], ["Mismatched area ID", "An area mismatch prevents reaching this adjacency stage."], ["Hello timer mismatch", "A timer mismatch prevents neighbours forming earlier."], ["A missing default route", "This isn't required for adjacency."]], c: [0], e: "Having reached EXSTART, hellos clearly work. Compare MTU on both ends." },
@@ -112,22 +63,6 @@ A packet needs a route, reverse path validity and a policy. Asymmetric routing c
       {
         slug: "advanced-ipsec", title: "Advanced IPsec", summary: "Dial-up, ADVPN, redundancy and deep debugging.", weight: 20, version: "FortiOS 7.6",
         objectives: ["Design hub-and-spoke with ADVPN", "Debug negotiation from logs", "Plan cryptographic migration"],
-        notes: `### Design choices
-- **Dial-up hub:** the hub accepts spokes with dynamic addresses, using one phase 1 template.
-- **ADVPN:** spokes make shortcuts following an initial path through the hub. With routing protocols over the overlay, routes are often summarised and next hops must allow shortcut selection.
-- **Redundancy:** multiple overlays with BGP, or SD-WAN SLA steering, usually beat simple DPD failover at scale.
-
-### Debugging
-\`\`\`
-diagnose vpn ike log filter name to-branch
-diagnose debug application ike -1
-diagnose debug enable
-diagnose vpn tunnel list name to-branch
-\`\`\`
-Look at SA counters: encrypted packets rising and decrypted packets flat means traffic leaves but nothing returns, so check the far end's routes and policy, or a path dropping ESP. Fragmentation can break large packets while small pings work; check MTU and TCP MSS clamping.
-
-### Keep up with crypto
-Prefer strong proposals and consider stronger DH groups, and IKEv2. FortiOS 8.0's exam objectives mention quantum-safe IPsec, so check documentation for your release if this is a requirement.`,
         concepts: ["Dial-up phase 1", "ADVPN shortcut", "SA counters", "MTU and MSS clamping", "Quantum-safe IPsec"], exercise: "Do the IPsec lab, then explain which SA counter would prove each failure.", sources: [DOCS.fortigate],
         questions: [
           { d: "EXPERT", topic: "SA counters", tech: "IPsec", p: "Site A sees the counters below for the tunnel to site B. What's the best next step?", x: "FGT-A # diagnose vpn tunnel list name to-B\nstat: rxp=0 txp=4120 rxb=0 txb=412000\nSA: proposal=aes256-sha256 ... state: established", a: [["Check site B's route and policy for the return path, and whether ESP is dropped on the way", "Site A is sending, but nothing returns."], ["Change the PSK on both sides", "The SA is already established."], ["Add a route on site A for its own LAN", "The local side is sending into the tunnel."], ["Lower the DH group", "Crypto negotiation has already succeeded."]], c: [0], e: "Check B's counters too. If B's rxp is rising, the fault is in B's return path or policy. If not, ESP is lost in transit." },
@@ -156,17 +91,6 @@ Prefer strong proposals and consider stronger DH groups, and IKEv2. FortiOS 8.0'
       {
         slug: "soc-foundations", title: "SOC foundations and architecture", summary: "Frameworks, adversaries and SOC design.", weight: 20, version: "FortiSOAR 7.6, FortiSIEM 7.3",
         objectives: ["Map detection coverage to ATT&CK", "Design telemetry", "Reason about adversary behaviour"],
-        notes: `### Coverage over volume
-Log volume isn't coverage. Ask which adversary techniques your telemetry and detections can actually see. MITRE ATT&CK provides a common language for that, and the **Cyber Kill Chain** remains a useful way to think about disrupting an attack at each stage.
-
-### Telemetry strategy
-Combine network, endpoint, identity and cloud sources. Identity logs are especially valuable, because attackers often use valid accounts rather than malware. Decide on retention by how long investigations take to look back, not just by storage cost.
-
-### Fortinet SOC architecture
-FortiGate and other sensors feed FortiAnalyzer or FortiSIEM. FortiSOAR orchestrates response. Others add intelligence and deception. The architecture must define who owns each step when an alert moves between them.
-
-### Operating model
-Clear severity definitions, escalation paths and on-call rotations matter as much as tools. Measure outcomes such as time to contain.`,
         concepts: ["ATT&CK coverage", "Kill chain", "Valid accounts", "Retention by investigation need", "Severity model"], sources: [doc("fortisiem"), doc("fortisoar")],
         questions: [
           { d: "EXPERT", topic: "Coverage", tech: "SOC architecture", p: "A SOC collects 50 TB of firewall logs monthly but no identity logs. An attacker uses stolen credentials on a VPN and then accesses file shares. What's the key gap?", a: [["Telemetry doesn't cover identity-based techniques, so valid-account abuse is hard to see", "Volume doesn't help where a technique's evidence is missing."], ["Too few firewalls", "More of the same logs won't help."], ["SOAR has too many playbooks", "This isn't the cause of the gap."], ["The retention period is too short", "Retention doesn't create missing sources."]], c: [0], e: "Plan sources from the techniques you need to detect." },
@@ -177,17 +101,6 @@ Clear severity definitions, escalation paths and on-call rotations matter as muc
       {
         slug: "detection-engineering", title: "Detection with FortiSIEM", summary: "Rule engineering and incident analysis.", weight: 30, version: "FortiSIEM 7.3",
         objectives: ["Engineer multi-pattern rules", "Query event logs", "Validate and measure detections"],
-        notes: `### Rule engineering
-Multi-subpattern rules link stages, for example failed logons followed by a success from the same source. A precise rule describes behaviour, a time window and how to group entities. Treat each rule as code: state its purpose, test data, known false positives and owner.
-
-### Test your detections
-A rule that has never fired may be broken or just rare. Replay sample events or simulate techniques, and verify that an incident is created with the right attributes.
-
-### Enrichment
-CMDB attributes help you weigh the same event differently on a domain controller and on a lab machine. Scoring should take account of asset criticality and identity privilege.
-
-### Incident analysis
-Start from what triggered the rule. Pivot to raw events, then to related activity by host and user. Record what you found so that the rule can improve.`,
         concepts: ["Multi-pattern rule", "Detection as code", "Replay testing", "Asset criticality", "Pivoting"], sources: [doc("fortisiem")],
         questions: [
           { d: "EXPERT", topic: "Rule design", tech: "FortiSIEM", p: "A team wants to detect a successful brute force, not just failures. Which rule design fits?", a: [["Two subpatterns: many failures followed by a success for the same user and source in a window", "This models the sequence of behaviour."], ["One subpattern counting successes for all users", "Normal logons would fire constantly."], ["One subpattern on any failed logon", "It alerts on every typo."], ["A daily report of total logons", "This is not a timely detection."]], c: [0], e: "Sequence plus shared entities turns weak signals into a stronger one." },
@@ -198,14 +111,6 @@ Start from what triggered the rule. Pivot to raw events, then to related activit
       {
         slug: "soar-incident-hunting", title: "SOAR incident handling and threat hunting", summary: "Queues, war rooms and hypothesis-driven hunts.", weight: 25, version: "FortiSOAR 7.6",
         objectives: ["Run a threat hunt", "Organise incident work in FortiSOAR", "Coordinate major incidents"],
-        notes: `### Threat hunting
-A hunt starts with a **hypothesis**, not an alert: for example, "an attacker is using a remote management tool from a server that doesn't normally run it". Then find relevant data, analyse it, and either confirm, refute or refine. A valuable outcome is a new detection, even if no attacker is found.
-
-### FortiSOAR incident work
-Alerts become incidents as they're confirmed. **Queues** and **shifts** direct workload. **SLAs** track response deadlines. **War rooms** give a shared space with a timeline, tasks and communication for major incidents.
-
-### Coordinating
-Name an incident commander. Separate decision-making from hands-on work. Keep a timeline, and agree when containment takes priority over evidence collection. Communication to executives or regulators follows a pre-agreed process.`,
         concepts: ["Hypothesis-driven hunt", "Queue and shift", "SLA", "War room", "Incident commander"], sources: [doc("fortisoar")],
         questions: [
           { d: "EXPERT", topic: "Hunting", tech: "Threat hunting", p: "Which is a strong threat-hunting hypothesis?", a: [["An attacker may be using PowerShell to reach domain controllers from workstations outside the IT group", "It's specific and testable with data."], ["There might be bad things on the network", "It's too vague to test."], ["All alerts should be closed by Friday", "This is an operational target."], ["Antivirus should be upgraded", "This is a task, not a hypothesis."]], c: [0], e: "A good hypothesis names a technique, an environment and evidence you could check." },
@@ -216,25 +121,6 @@ Name an incident commander. Separate decision-making from hands-on work. Keep a 
       {
         slug: "soar-playbooks", title: "SOAR playbook development", summary: "Engineering reliable automation.", weight: 25, version: "FortiSOAR 7.6",
         objectives: ["Structure reusable playbooks", "Transform data with Jinja", "Handle errors and idempotence"],
-        notes: `### Build for maintenance
-Create small, reusable **sub-playbooks** for jobs such as IP enrichment. Keep configuration in variables rather than hard-coded values, and use a clear naming scheme.
-
-### Data handling
-Use Jinja to reach values and transform them, and guard against missing data:
-\`\`\`
-{% if vars.steps.Lookup.data.results %}
-{{ vars.steps.Lookup.data.results | map(attribute='score') | max }}
-{% else %}0{% endif %}
-\`\`\`
-
-### Reliability
-- **Idempotence:** running an action twice is safe. Check whether the block already exists before adding it.
-- **Error paths:** decide what happens when a connector times out. Should it retry, or notify a person?
-- **Rate limits:** a loop over a thousand items may exceed a provider's API limit.
-- **Audit:** keep execution records so that actions can be explained.
-
-### Change control
-Test in a non-production environment, version playbooks, and remove obsolete ones. An outdated automated response is a production risk.`,
         concepts: ["Sub-playbook", "Idempotence", "Error handling", "API rate limits", "Playbook versioning"], sources: [doc("fortisoar")],
         questions: [
           { d: "EXPERT", topic: "Idempotence", tech: "FortiSOAR", p: "A blocking playbook sometimes runs twice for the same alert, causing an error because the address object already exists. What's the best fix?", a: [["Check for the object first, so repeat runs are safe", "This makes the action idempotent."], ["Turn off error logging", "This hides the problem."], ["Run it three times", "This doesn't help."], ["Delete all objects each run", "This breaks existing policy."]], c: [0], e: "Automation retries and duplicates happen, so actions should be safe when repeated." },
@@ -261,23 +147,6 @@ Test in a non-production environment, version playbooks, and remove obsolete one
       {
         slug: "zero-trust-architecture", title: "Zero Trust and identity architecture", summary: "Designing identity-driven access.", weight: 50,
         objectives: ["Design a phased Zero Trust plan", "Use identity and posture signals", "Plan for unmanaged devices and third parties"],
-        notes: `### Principles to architecture
-Zero Trust isn't a product. It's a design in which each access decision uses identity, device state and context, with minimal privilege and ongoing evaluation. Assume that any network location, internal or external, can be hostile.
-
-### A phased approach
-1. Identify users, devices, applications and data.
-2. Consolidate identity and require strong MFA.
-3. Move high-risk applications to ZTNA.
-4. Replace broad VPN access in stages, and add segmentation.
-5. Measure: remaining broad access, posture failures and access exceptions.
-
-### Hard cases
-- **Unmanaged and third-party devices:** you have no posture data. Limit them to browser-based or isolated access to specific apps.
-- **Legacy applications:** they may not support modern identity, so place a proxy in front and restrict paths.
-- **Availability:** if the identity provider fails, how do administrators get in? A break-glass process must exist and be protected.
-
-### Identity risk
-Phishing-resistant MFA, such as FIDO2, reduces the risk of credential and MFA-prompt attacks. Conditional decisions can step up authentication for sensitive apps.`,
         concepts: ["Continuous evaluation", "Phased migration", "Unmanaged device access", "Break-glass", "Phishing-resistant MFA"], sources: [DOCS.fortisase],
         questions: [
           { d: "EXPERT", topic: "Third parties", tech: "Zero Trust", p: "A supplier's engineers need access to one internal maintenance portal from devices you don't manage. Which design is best?", a: [["Per-application, identity-verified access with MFA and restricted capabilities, and no network-level access", "This limits scope without posture."], ["A full-tunnel VPN into the production network", "This gives broad network access from an unknown device."], ["A public port forward protected by a password", "This exposes the portal widely."], ["Sharing an employee's account", "This removes accountability."]], c: [0], e: "Without posture information, reduce what the session can reach and do." },
@@ -288,21 +157,6 @@ Phishing-resistant MFA, such as FIDO2, reduces the risk of credential and MFA-pr
       {
         slug: "sase-sdwan-integration", title: "SASE and SD-WAN integration", summary: "Distributed connectivity and troubleshooting.", weight: 50,
         objectives: ["Choose traffic paths for users and sites", "Integrate private access with hubs", "Troubleshoot by following the path"],
-        notes: `### Traffic path decisions
-Decide per traffic class: remote user to internet, remote user to private app, branch to internet, branch to data centre. SASE PoPs handle much of the cloud-bound traffic, and SD-WAN overlays handle private transport. Avoid accidental hairpins, such as a SaaS session going from the branch to a hub and then back through a PoP.
-
-### Private access integration
-FortiSASE connects to SD-WAN hubs, often with BGP over IPsec overlays. Plan address space so that user pools don't overlap on-premises subnets. Advertise only what's required. Choose which hub each PoP prefers and how it fails over.
-
-### Troubleshooting method
-Follow each hop and check the evidence at each:
-1. Endpoint: agent connected? Which PoP?
-2. SASE: is a policy matched, and which log says so?
-3. Overlay: is the route learned, and is the tunnel passing traffic?
-4. Hub: does route and policy exist?
-5. Application: does it respond, and does its return route point to the user pool?
-
-Performance complaints need path data as well: endpoint Wi-Fi, ISP, PoP region and application location. Digital experience monitoring helps separate these.`,
         concepts: ["Traffic class", "Hairpin", "User pool overlap", "BGP over overlay", "Hop-by-hop troubleshooting", "Digital experience monitoring"], sources: [DOCS.fortisase, DOCS.fortigate],
         questions: [
           { d: "EXPERT", topic: "Addressing", tech: "FortiSASE", p: "Remote users can't reach some internal servers after a private access rollout. The FortiSASE user pool is 10.20.0.0/16, and those servers are in 10.20.5.0/24 on site. What's the most likely cause?", a: [["Overlapping address space confuses the routing", "Traffic to or from those addresses can resolve to the wrong place."], ["FortiSASE can't handle TCP", "It can."], ["The servers need a new FortiGuard category", "This doesn't apply."], ["The users' browsers are too new", "This doesn't explain the subnet-specific failure."]], c: [0], e: "Subnet-specific failure points to routing or addressing. Non-overlapping pools should be planned at design time." },
@@ -330,27 +184,6 @@ Performance complaints need path data as well: endpoint Wi-Fi, ISP, PoP region a
       {
         slug: "cloud-network-security", title: "Cloud networking and firewall architecture", summary: "Inspection patterns in AWS and Azure.", weight: 50,
         objectives: ["Choose a centralised or distributed inspection pattern", "Design for HA in the cloud", "Avoid asymmetric traffic"],
-        notes: `### How cloud differs
-Cloud networks route through provider-controlled fabrics. You can't simply add a firewall in line: you change route tables so that traffic passes through it. There's no broadcast, so traditional first-hop redundancy methods don't work the same way.
-
-### Patterns
-**AWS:** a centralised inspection VPC attached through **Transit Gateway** is common, often with a **Gateway Load Balancer** distributing traffic to FortiGate VMs. Keep flows symmetric, for which TGW **appliance mode** is relevant in multi-AZ designs.
-
-**Azure:** a **hub-and-spoke VNet** with a hub firewall and **User Defined Routes** is common, frequently with an internal load balancer in front of a FortiGate pair. **Azure Virtual WAN** is another option.
-
-### Centralised or distributed
-| | Centralised | Distributed |
-| --- | --- | --- |
-| Consistency | Easier | Harder |
-| Cost | Shared | Per environment |
-| Latency and egress | Extra hops, possibly cross-zone charges | Lower |
-| Blast radius | Larger shared dependency | Smaller |
-
-### Automation
-Autoscale requires bootstrap configuration, license handling and configuration sync. Define these with infrastructure as code so that environments don't drift. The Fortinet Terraform provider is one route.
-
-### Identity and egress
-Use cloud-native metadata in policy through dynamic address objects (SDN connectors), since cloud IPs change. Restrict workload egress, as attackers use it for command and control and data theft.`,
         concepts: ["Route-table steering", "Transit Gateway", "Gateway Load Balancer", "Appliance mode", "User Defined Routes", "SDN connector"], sources: [DOCS.fortigate],
         questions: [
           { d: "EXPERT", topic: "Symmetry", tech: "AWS", p: "In a multi-AZ AWS inspection VPC behind Transit Gateway, some stateful sessions fail, because return traffic reaches a FortiGate in a different AZ. Which setting most directly addresses this?", a: [["Enable Transit Gateway appliance mode on the inspection attachment", "It keeps a flow's two directions on the same AZ's attachment."], ["Add a second internet gateway", "This doesn't address flow symmetry."], ["Disable the firewall's session table", "This removes stateful inspection."], ["Move workloads to a public subnet", "This reduces security and doesn't fix the issue."]], c: [0], e: "Stateful firewalls need both directions of a flow. Check the current AWS documentation for your region and design." },
@@ -362,17 +195,6 @@ Use cloud-native metadata in policy through dynamic address objects (SDN connect
       {
         slug: "application-workload-security", title: "Application and workload protection", summary: "Layered protection and cloud monitoring.", weight: 50,
         objectives: ["Layer WAF, API and workload controls", "Secure containers and CI/CD", "Investigate cloud incidents"],
-        notes: `### Layers
-A public application might use FortiAppSec Cloud or FortiWeb for HTTP attacks and bots, FortiADC for delivery, a cloud firewall for segmentation, and FortiCNAPP for workload and configuration risk. Be clear about what each covers. A WAF doesn't fix a vulnerable library or an over-permissioned role.
-
-### APIs
-APIs are attacked differently from websites. Enforce a schema, authenticate and authorise each request, and apply rate limits. **Broken object level authorisation**, where a user can get another user's object by changing an ID, needs application fixes as well as monitoring. A WAF can't generally judge who owns an object.
-
-### Containers and pipelines
-Scan images before they're deployed, use minimal base images, and run with least privilege. Pipelines hold powerful credentials, so protect them and use short-lived identities. Treat infrastructure as code as a place to catch misconfiguration before deployment.
-
-### Cloud detection and response
-Collect control-plane audit logs, such as CloudTrail or Azure Activity Logs, along with flow and workload data. Attackers abuse identities and APIs, so a stolen access key may not touch any firewall. Containment includes disabling credentials, isolating workloads and keeping a snapshot for forensics. Beware of deleting evidence: terminating an instance may lose volatile data.`,
         concepts: ["Layered controls", "BOLA", "API schema enforcement", "Short-lived credentials", "Control-plane logs", "Cloud forensics"], sources: [doc("forticnapp"), doc("fortiweb")],
         questions: [
           { d: "EXPERT", topic: "APIs", tech: "API security", p: "An API returns any customer's invoice when an authenticated user changes the invoice ID. Which statement is most accurate?", a: [["This is broken object level authorisation, and the fix must include an ownership check in the application", "A WAF generally can't know who owns each object."], ["A WAF signature alone will fully fix this", "The requests look syntactically valid."], ["Encrypting traffic with TLS will fix it", "The user is authorised to use TLS and still sees the data."], ["It's a volumetric DDoS attack", "This isn't related to traffic volume."]], c: [0], e: "Rate limits and anomaly detection can help detect abuse, but authorisation belongs in the application." },

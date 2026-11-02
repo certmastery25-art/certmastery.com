@@ -40,13 +40,13 @@ export default async function NseDashboardPage() {
       <div className="page-heading"><p className="eyebrow">Fortinet NSE dashboard</p><h1>Your Fortinet progress</h1><p>{levelName ? `You're working at NSE ${currentLevel}: ${levelName.name}.` : "You haven't started yet. Choose a pathway to begin."}</p></div>
 
       <dl className="nse-hero-stats nse-dash-stats">
-        <div><dt>Modules studied</dt><dd>{modulesDone}<small>/{modulesTotal}</small></dd></div>
+        <div><dt>Topics practised</dt><dd>{modulesDone}<small>/{modulesTotal}</small></dd></div>
         <div><dt>Questions answered</dt><dd>{answered}</dd></div>
         <div><dt>Overall accuracy</dt><dd>{answered ? `${Math.round((correct / answered) * 100)}%` : "None yet"}</dd></div>
         <div><dt>Labs complete</dt><dd>{completedLabs.size}<small>/{labsTotal}</small></dd></div>
       </dl>
 
-      {!active.length && <div className="empty-state nse-empty"><Gauge size={26} /><p>Your readiness and topic scores will appear here after you start studying.</p><Link className="button button-primary" href="/fortinet/nse-1">Start at NSE 1 <ArrowRight size={16} /></Link></div>}
+      {!active.length && <div className="empty-state nse-empty"><Gauge size={26} /><p>Your readiness and topic scores will appear here after you start practising.</p><Link className="button button-primary" href="/fortinet/nse-1">Start at NSE 1 <ArrowRight size={16} /></Link></div>}
 
       {active.map((row) => {
         const strengths = row.topics.filter((topic) => topic.percent !== null && topic.total >= 3 && topic.percent >= 80);
@@ -69,7 +69,7 @@ export default async function NseDashboardPage() {
                 <dl className="nse-breakdown">{(Object.keys(READINESS_WEIGHTS) as (keyof typeof READINESS_WEIGHTS)[]).map((key) => <div key={key}><dt>{COMPONENT_LABELS[key][0]} <small>{Math.round(READINESS_WEIGHTS[key] * 100)}% of score</small></dt><dd>{row.readiness.components[key]}%</dd></div>)}</dl>
                 <h3>Strengths</h3><p>{strengths.map((topic) => topic.title).join(", ") || "None yet. Strengths need 80% or more on at least three answers."}</p>
                 <h3>Needs work</h3><p>{weaknesses.map((topic) => topic.title).join(", ") || "Nothing flagged yet."}</p>
-                <h3>Modules left to study</h3><p>{outstanding.map((topic) => topic.title).join(", ") || "All modules studied."}</p>
+                <h3>Topics left to practise</h3><p>{outstanding.map((topic) => topic.title).join(", ") || "All topics practised."}</p>
                 <Link className="button button-primary" href={next.href}>{next.label} <ArrowRight size={16} /></Link>
               </div>
             </div>

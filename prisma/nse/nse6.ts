@@ -21,32 +21,6 @@ export const nse6Pathways: SeedPathway[] = [
       {
         slug: "fortimanager", title: "FortiManager", summary: "ADOMs, policy packages, installs and troubleshooting.", weight: 50, version: "FortiManager 7.6",
         objectives: ["Add devices and handle synchronisation", "Use policy packages and ADOM objects", "Troubleshoot import and install failures"],
-        notes: `### Connection
-FortiGate and FortiManager communicate using **FGFM on TCP 541**. On the FortiGate:
-\`\`\`
-config system central-management
-    set type fortimanager
-    set fmg 10.0.0.60
-end
-\`\`\`
-After authorising a device, FortiManager holds a copy of its settings in its **device database**.
-
-### The model
-An **ADOM** groups devices of a compatible version and isolates objects. **Policy packages** hold firewall policies that can be installed on many devices. **Dynamic objects and metadata variables** let one package map to different values on each device. Global ADOMs can push shared policies above and below local ones.
-
-### Install flow
-Import or retrieve the device's configuration, edit it in FortiManager, preview, then install. Status values to learn:
-- **Synchronized:** the two are in step.
-- **Modified:** changed on FortiManager, not yet installed.
-- **Out of sync / Auto-update:** changed locally on the FortiGate.
-
-Local changes create conflict. Either enable automatic retrieve for them, or retrieve the config before you install, or you may overwrite them.
-
-### Troubleshooting
-Before installing, look at the **install preview** and the **install log**. Common failures: an object that exists with conflicting values, an unsupported setting for that firmware, or a loss of FGFM connectivity. An ADOM version mismatch and unassigned interface mappings are also common. For packages, an unmapped **normalized interface** on one device breaks that device's install.
-
-### Workspace mode
-Workspace or workflow mode locks objects and records changes to help multiple administrators work safely.`,
         concepts: ["FGFM TCP 541", "Device database", "Policy package", "Normalized interface", "Install preview", "Workspace mode"],
         exercise: "Do the FortiManager integration lab.",
         sources: [DOCS.fortimanager],
@@ -61,17 +35,6 @@ Workspace or workflow mode locks objects and records changes to help multiple ad
       {
         slug: "fortinac", title: "FortiNAC", summary: "Visibility, profiling and network access control.", weight: 25,
         objectives: ["Explain how FortiNAC gains visibility", "Use device profiling", "Enforce access with VLANs or policy"],
-        notes: `### What NAC solves
-You can't secure what you don't know is connected: printers, cameras, IoT sensors and personal devices. FortiNAC discovers devices, profiles them, then controls what they can reach.
-
-### Visibility and profiling
-FortiNAC models the network by reading from switches, routers and wireless controllers, using SNMP and CLI methods as well as other sources. **Device profiling rules** use methods like DHCP fingerprinting, vendor OUI and traffic attributes to classify a device, for example as an IP camera.
-
-### Control
-Depending on the design, FortiNAC changes network access by moving a port or device to another VLAN, by applying a policy through a FortiGate, or through RADIUS. Typical states are **registered**, **rogue/unknown** and **quarantine**. Isolate unknown devices rather than giving them production access.
-
-### Practical limits
-OUI alone is weak and can be spoofed, so combine methods. Testing is important before enforcement: a wrong rule can move critical equipment out of its VLAN. Use a monitor-only phase first.`,
         concepts: ["Device profiling", "DHCP fingerprint", "Rogue host", "VLAN enforcement", "Monitor first"], sources: [doc("fortinac")],
         questions: [
           { d: "ADVANCED", topic: "Rollout", tech: "FortiNAC", p: "A hospital plans to enforce device-based VLANs across all sites next week. Which approach is the least risky?", a: [["Run in visibility mode, validate the profiling results, then enforce in stages", "This avoids moving critical devices by mistake."], ["Enforce everywhere at once to shorten the project", "A profiling error could disrupt clinical systems."], ["Rely on OUI alone for all medical devices", "OUI is weak evidence and may misclassify."], ["Remove all VLANs first", "This removes existing segmentation."]], c: [0], e: "For NAC, an enforcement error is an availability incident." },
@@ -82,15 +45,6 @@ OUI alone is weak and can be spoofed, so combine methods. Testing is important b
       {
         slug: "fortivoice-fortianalyzer-admin", title: "FortiVoice and FortiAnalyzer administration", summary: "Voice basics and running FortiAnalyzer as a platform.", weight: 25,
         objectives: ["Explain SIP call flow issues", "Manage FortiAnalyzer storage and HA concepts"],
-        notes: `### FortiVoice
-FortiVoice is an IP PBX and unified communications platform. It uses SIP for call signalling and RTP for audio. Check connectivity in both: a call that connects with one-way audio often points to NAT or firewall treatment of RTP rather than signalling.
-
-Trunks connect to a carrier, and extensions and dial plans determine routing. Treat voice as a security target: weak extension passwords lead to toll fraud.
-
-### FortiAnalyzer administration
-The analyst's view is in NSE 5. As an administrator you size **disk quotas** by ADOM, set **data policies** and watch the **log rate**. If logs arrive faster than the unit can process them, you'll see delays in analytics. Run FortiAnalyzer in HA or forward logs to another system where retention or availability requires it.
-
-Fortinet listed both of these exams as due in Q4 2026 when we checked, so their objectives may change.`,
         concepts: ["SIP vs RTP", "Toll fraud", "Disk quota", "Log rate", "Log forwarding"], sources: [doc("fortivoice"), DOCS.fortianalyzer],
         questions: [
           { d: "ADVANCED", topic: "One-way audio", tech: "FortiVoice", p: "Calls connect but one party can't hear audio. Signalling is working. What should be investigated first?", a: [["NAT and firewall handling of the RTP media path", "Media takes a different path and ports from signalling."], ["The SIP password", "Calls connect, so registration works."], ["The FortiGuard licence", "This doesn't directly cause one-way audio."], ["DNS filter logs for the web", "These aren't the first check here."]], c: [0], e: "SIP signalling and RTP media are distinct flows, which is why signalling success doesn't prove that audio will work." },
@@ -116,22 +70,6 @@ Fortinet listed both of these exams as due in Q4 2026 when we checked, so their 
       {
         slug: "fortisiem", title: "FortiSIEM", summary: "Architecture, CMDB and rule logic.", weight: 40,
         objectives: ["Describe the supervisor, worker and collector roles", "Read rule logic", "Use the CMDB to add context"],
-        notes: `### Architecture
-A **Supervisor** provides the GUI and control. **Workers** process events and queries for scale. **Collectors** gather data from remote sites and forward it. Discovery builds a **CMDB** of devices and applications, which gives events useful context.
-
-### Rules
-A rule has one or more **subpatterns**. Each filters events, groups by attributes, and uses an aggregate condition.
-\`\`\`
-Subpattern: FailedLogons
-  Filter:     Event Type IN (Logon failures)
-  Group by:   Source IP, User
-  Aggregate:  COUNT(Matched Events) >= 10
-  Window:     300 seconds
-\`\`\`
-Grouping decides what is counted together. Grouped by source and user, the rule catches many guesses against one account from one address, but a password spray across many users would not meet it. So you'd group by source and count distinct users to catch spraying.
-
-### Investigating
-Analytic searches can pivot from incidents to raw events. Use CMDB context such as device criticality to prioritise them. Rule triggering depends on the **event type classification**: if events aren't parsed correctly, the rule can't match, so check parsers before rewriting logic.`,
         concepts: ["Supervisor, worker, collector", "CMDB", "Subpattern", "Group by and aggregate", "Parser"], sources: [doc("fortisiem")],
         questions: [
           { d: "EXPERT", topic: "Rule logic", tech: "FortiSIEM", p: "This rule misses a password spray in which one source tries one password against 200 users. What change detects it?", x: "Filter: Logon failure\nGroup by: Source IP, User\nAggregate: COUNT(Matched Events) >= 10 in 300s", a: [["Group by Source IP and aggregate on a distinct count of users", "This counts how many accounts one source has tried."], ["Add more users to the Group by clause", "Grouping per user is what splits the count."], ["Increase the count threshold to 100", "It would make detection even harder."], ["Shorten the window with the same grouping", "Each per-user count stays at one."]], c: [0], e: "A spray's signature is breadth, one try per user. The original rule detects depth, many tries on one user." },
@@ -142,22 +80,6 @@ Analytic searches can pivot from incidents to raw events. Use CMDB context such 
       {
         slug: "fortisoar", title: "FortiSOAR", summary: "Playbooks, connectors and case handling.", weight: 30,
         objectives: ["Design a safe playbook", "Use connectors and Jinja", "Decide what to automate"],
-        notes: `### Automation
-FortiSOAR automates security workflows with **playbooks**, made of triggers and steps. **Connectors** integrate with other products, such as a FortiGate or a threat intelligence source. **Jinja** expressions manipulate data between steps.
-
-\`\`\`
-{{ vars.input.records[0].sourceIp }}
-{{ vars.steps.Get_Reputation.data.score | int }}
-\`\`\`
-
-### Designing a safe playbook
-Automate reversible, high-confidence steps first, such as enrichment. Keep humans in the loop with a **manual approval step** for impactful actions, like blocking a business-critical address. Handle errors: a failed step shouldn't leave an incident in an ambiguous state.
-
-### Case management
-Records for alerts, incidents and indicators track work. **Queues** and **shifts** route tasks to the right team. **War rooms** bring responders together for serious incidents.
-
-### Troubleshooting
-Execution history shows each step's input and output. Most failures come from unexpected input data, connector configuration, or a Jinja path that doesn't exist in the record.`,
         concepts: ["Playbook trigger", "Connector", "Jinja", "Manual approval", "Execution history", "War room"], sources: [doc("fortisoar")],
         questions: [
           { d: "ADVANCED", topic: "Automation safety", tech: "FortiSOAR", p: "A playbook blocks any IP with a medium threat score. Last week it blocked a partner's gateway. What is the best change?", a: [["Add an allowlist check and a manual approval step for medium-confidence blocks", "This keeps automation while controlling impact."], ["Delete the playbook and stop automation", "This loses automation's benefit altogether."], ["Block more addresses to compensate", "This increases the risk."], ["Remove logging from the playbook", "This reduces accountability."]], c: [0], e: "Match automation to confidence and impact." },
@@ -168,21 +90,6 @@ Execution history shows each step's input and output. Most failures come from un
       {
         slug: "ndr-recon-deception", title: "FortiNDR Cloud, FortiRecon and FortiDeceptor", summary: "Network detection, external intelligence and deception.", weight: 30,
         objectives: ["Explain what each product detects", "Choose a product for a given gap", "Use deception signals"],
-        notes: `### FortiNDR Cloud
-**Network detection and response** analyses network metadata from sensors to find suspicious behaviour such as command-and-control and lateral movement, useful where endpoint agents can't be deployed. It gives retrospective search over retained metadata.
-
-### FortiRecon
-FortiRecon looks **outside** the organisation, with three broad areas: **external attack surface management**, **brand protection** such as lookalike domains, and **adversary-centric intelligence** on threat actors and leaked data.
-
-### FortiDeceptor
-**Deception** places decoys and lures that legitimate users have no reason to touch. An interaction is a high-confidence signal. It can also integrate with other Fabric products to quarantine the source. Deception is useful for OT and flat networks where other tooling is difficult, but decoys must look realistic and be placed where attackers will look.
-
-### Comparing them
-| Need | Product |
-| --- | --- |
-| See exposed services and leaked credentials | FortiRecon |
-| Detect lateral movement from network behaviour | FortiNDR Cloud |
-| High-confidence signal from an intruder inside | FortiDeceptor |`,
         concepts: ["NDR metadata", "EASM", "Brand protection", "Decoy and lure", "High-fidelity alert"], sources: [doc("fortindr-cloud"), doc("fortirecon"), doc("fortideceptor")],
         questions: [
           { d: "INTERMEDIATE", topic: "Deception", tech: "FortiDeceptor", p: "Why is an interaction with a decoy considered a high-confidence alert?", a: [["Legitimate users have no reason to touch it", "So activity is suspicious by design."], ["Decoys run on faster hardware", "This has no relevance."], ["Decoys hold real customer data", "They should not hold real sensitive data."], ["Decoys can't be scanned", "Attackers can scan them, which is the point."]], c: [0], e: "Deception's strength is a low false-positive rate. Authorised scanners should be excluded or expected." },
@@ -209,24 +116,6 @@ FortiRecon looks **outside** the organisation, with three broad areas: **externa
       {
         slug: "forticlient-ems", title: "FortiClient EMS", summary: "Endpoint management and ZTNA tags.", weight: 40,
         objectives: ["Deploy FortiClient profiles", "Use ZTNA tags with FortiGate", "Troubleshoot posture-based access"],
-        notes: `### Role
-**FortiClient EMS** centrally manages FortiClient: it deploys software, assigns **profiles** by group, and gets **telemetry** from each endpoint.
-
-### Tags and ZTNA
-EMS evaluates **posture rules** such as OS version or running antivirus, and applies **ZTNA tags**. An **EMS Fabric connector** syncs tags to FortiGate, where policy can use them.
-
-ZTNA access flow:
-1. The user's endpoint presents an EMS-issued client certificate to the FortiGate's access proxy.
-2. The FortiGate identifies the device and its tags.
-3. A rule applies identity, tags and destination, then proxies the connection.
-
-### Common faults
-- The FortiGate doesn't trust EMS (check the connector and certificate authorisation).
-- The tag isn't synced yet, or the endpoint isn't registered.
-- The device certificate is missing or the browser or client doesn't present it.
-- A posture rule's condition is correct for most devices but fails on one OS build.
-
-Check what EMS says about the endpoint, and then what the FortiGate says.`,
         concepts: ["Endpoint telemetry", "ZTNA tag", "EMS Fabric connector", "Access proxy", "Client certificate"], sources: [doc("forticlient"), DOCS.fortigate],
         questions: [
           { d: "EXPERT", topic: "ZTNA tags", tech: "FortiClient EMS", p: "A patched laptop is denied by a ZTNA rule requiring the Compliant tag. EMS shows the tag on the endpoint. On the FortiGate the device doesn't have the tag. What should be checked?", a: [["The EMS Fabric connector and tag synchronisation on the FortiGate", "EMS is correct, so the fault lies in passing information to the FortiGate."], ["The laptop's posture rule", "EMS already shows the correct tag."], ["The DNS filter category", "This isn't relevant to a tag decision."], ["The firmware of a FortiSwitch", "This isn't relevant."]], c: [0], e: "Follow the data: endpoint to EMS, EMS to FortiGate, FortiGate to rule. Here the second link is broken." },
@@ -237,20 +126,6 @@ Check what EMS says about the endpoint, and then what the FortiGate says.`,
       {
         slug: "fortiedr", title: "FortiEDR", summary: "Endpoint detection, response and exception handling.", weight: 30,
         objectives: ["Describe architecture", "Triage security events", "Create safe exceptions"],
-        notes: `### Components
-**Collectors** run on endpoints. The **Core** analyses activity, the **Aggregator** manages communication and load, and the **Central Manager** provides the console. Threat Hunting searches recorded activity.
-
-### Prevention and simulation
-Policies can run in **simulation**, which logs what would be blocked, or **prevention**, which blocks. Start with simulation on a new population, review it and then change to prevention, focusing on the groups with the most risk.
-
-### Triage
-Review the event's process chain, which rule fired and the destination. A signed tool used in an unusual way can still be malicious; living-off-the-land attacks rely on this.
-
-### Exceptions
-Make exceptions as narrow as possible: tie them to a specific process path, rule and collector group. Don't exclude a broad tool such as PowerShell across the estate because of one business script.
-
-### Response
-Playbooks can notify, isolate a device or remediate. Isolate first if the threat is active, and collect the evidence you need.`,
         concepts: ["Collector, Core, Aggregator", "Simulation vs prevention", "Process chain", "Living off the land", "Narrow exception"], sources: [doc("fortiedr")],
         questions: [
           { d: "ADVANCED", topic: "Exceptions", tech: "FortiEDR", p: "A business script run by PowerShell triggers a FortiEDR event daily. What is the best exception?", a: [["An exception limited to the script's specific path and rule on the relevant group", "This leaves PowerShell protection in place elsewhere."], ["Exclude PowerShell everywhere", "Attackers commonly abuse PowerShell."], ["Move all collectors to simulation", "This removes blocking from everyone."], ["Uninstall the collector on that server", "This removes all protection."]], c: [0], e: "Narrow exceptions fix the false positive without creating a blind spot." },
@@ -261,20 +136,6 @@ Playbooks can notify, isolate a device or remediate. Isolate first if the threat
       {
         slug: "fortidlp", title: "FortiDLP", summary: "Protecting sensitive data on endpoints.", weight: 30,
         objectives: ["Explain behaviour-based data protection", "Write proportionate policies", "Investigate a data incident"],
-        notes: `### Approach
-**FortiDLP** uses an endpoint agent to monitor how data moves: uploads, removable media, cloud apps, printing and copy and paste into web apps, including AI tools. Instead of relying only on content patterns, it adds user and data context.
-
-### Policy design
-Start by monitoring. Identify sensitive data with labels, content patterns and data origin. Then respond in proportion:
-- **Educate:** coach the user at the moment of risk.
-- **Warn or require justification:** the user can continue but it is recorded.
-- **Block:** for clearly prohibited actions.
-
-### Investigation and privacy
-An incident should show the user, data, destination and timeline. Monitoring employees has legal and privacy implications, so involve HR and legal teams. Restrict analyst access, and consider masking identities until an investigation is justified.
-
-### False positives
-Regular expressions alone produce false positives: a 16-digit number isn't always a card number. Use validation such as checksums, plus surrounding context.`,
         concepts: ["Data lineage", "Coaching", "Justification", "Pattern validation", "Privacy controls"], sources: [doc("fortidlp")],
         questions: [
           { d: "ADVANCED", topic: "Policy", tech: "FortiDLP", p: "Staff paste customer data into a public AI chatbot. Management wants to reduce this but avoid blocking all productive AI use immediately. Which first step is the most appropriate?", a: [["Monitor and coach users when sensitive data is pasted, then tighten based on evidence", "This changes behaviour and builds evidence with low disruption."], ["Block all websites", "This is disproportionate."], ["Do nothing until a breach occurs", "This accepts a known risk."], ["Publish an email reminder only", "A reminder alone doesn't provide visibility or control."]], c: [0], e: "Policy can be tightened for sensitive categories as you see how people actually use the tools." },
@@ -301,17 +162,6 @@ Regular expressions alone produce false positives: a 16-digit number isn't alway
       {
         slug: "forticnapp", title: "FortiCNAPP", summary: "Cloud-native application protection.", weight: 35,
         objectives: ["Explain CNAPP", "Prioritise findings", "Investigate anomalies"],
-        notes: `### What a CNAPP does
-A **cloud-native application protection platform** brings together posture management (misconfiguration), workload protection, identity risk, and vulnerability and code scanning. FortiCNAPP reads cloud APIs and audit logs, and it can use agents or agentless scanning for workloads.
-
-### Prioritising
-Cloud findings can number in the thousands. Prioritise by **attack path**: a critical CVE on an isolated host may matter less than a medium flaw on an internet-exposed VM with an over-privileged role. **Identity** is often the most important part of that path.
-
-### Anomaly detection
-FortiCNAPP builds a behavioural baseline of normal activity, and can flag deviations such as a new outbound connection or a role used in an unusual region. Baselines take time to form and need context: a planned migration can look like an attack.
-
-### Compliance
-Reports map to frameworks. A pass shows that a control is configured, not that the environment is secure, and failed controls should be prioritised by risk.`,
         concepts: ["CSPM", "CWPP", "CIEM", "Attack path", "Behavioural baseline"], sources: [doc("forticnapp")],
         questions: [
           { d: "EXPERT", topic: "Prioritisation", tech: "FortiCNAPP", p: "Which finding should a team address first?", x: "A: Critical CVE on a VM with no inbound access and no sensitive role\nB: High CVE on an internet-facing VM whose role can read all customer storage\nC: Medium finding on a test bucket containing no data\nD: Low finding on a disabled account", a: [["B", "It combines exposure, an exploitable flaw and a powerful identity leading to sensitive data."], ["A", "Severity alone ignores the lack of exposure and impact."], ["C", "There's little impact here."], ["D", "This poses little risk."]], c: [0], e: "A flaw's score isn't its risk. Reachability and privilege determine what an attacker can actually do." },
@@ -322,26 +172,6 @@ Reports map to frameworks. A pass shows that a control is configured, not that t
       {
         slug: "fortimail", title: "FortiMail", summary: "Email security modes, filtering and authentication.", weight: 35,
         objectives: ["Choose a deployment mode", "Interpret SPF, DKIM and DMARC", "Tune spam and impersonation controls"],
-        notes: `### Operating modes
-- **Gateway:** sits before a mail server and relays mail; MX points to it.
-- **Transparent:** inline and invisible to mail flow addressing.
-- **Server:** FortiMail also hosts mailboxes.
-
-### Domain authentication
-- **SPF:** which servers may send for a domain.
-- **DKIM:** a signature over the message, using the domain's key.
-- **DMARC:** what to do when SPF and DKIM fail to align with the visible From domain, and where to send reports.
-
-Passing SPF doesn't prove that the visible From address is genuine unless it aligns with it. That's why DMARC matters.
-
-### Filtering
-Session profiles apply to the SMTP connection, such as sender reputation and rate limits. Antispam profiles apply content and reputation checks. Antivirus, sandboxing and content disarm can protect against malicious attachments and URLs. **Impersonation analysis** helps with executive-spoofing attacks.
-
-### Troubleshooting
-History logs show what happened to each message and why. If a legitimate sender is blocked, find the specific reason before you add an allowlist entry, since allowlists can also bypass protection.
-
-### FortiMail WorkSpace Security
-This product extends protection to collaboration apps. Its exam was marked for Q4 2026 when we checked, so check the official objectives.`,
         concepts: ["Gateway, transparent, server", "SPF, DKIM, DMARC", "Session profile", "History log", "Impersonation analysis"], sources: [doc("fortimail")],
         questions: [
           { d: "ADVANCED", topic: "Authentication", tech: "Email security", p: "A phishing message shows From: ceo@example.com, but SPF passes for bounce.attacker.test. Which control is specifically meant to catch this mismatch?", a: [["DMARC alignment", "It checks that the authenticated domain matches the visible From domain."], ["SPF alone", "SPF passed for a different domain."], ["DNS caching", "This isn't an authentication control."], ["TLS only", "TLS protects transit and doesn't validate the sender's identity."]], c: [0], e: "SPF checks the envelope sender. DMARC ties authentication to what the user actually sees." },
@@ -352,19 +182,6 @@ This product extends protection to collaboration apps. Its exam was marked for Q
       {
         slug: "fortiddos", title: "FortiDDoS", summary: "Behaviour-based DDoS mitigation.", weight: 30,
         objectives: ["Distinguish DDoS types", "Use learning and thresholds", "Understand what on-premises mitigation can't do"],
-        notes: `### DDoS types
-- **Volumetric:** fills the link.
-- **Protocol:** exhausts state, such as a SYN flood.
-- **Application:** looks like valid requests but overwhelms an application, such as HTTP floods.
-
-### FortiDDoS approach
-FortiDDoS sits inline and builds **behavioural baselines** to set adaptive thresholds, rather than relying only on signatures. **Service Protection Profiles (SPPs)** apply settings to a protected group of services.
-
-### Deployment
-Typically you start in **detection mode** to learn traffic, review thresholds and then move to **prevention mode**. Keep baselines updated as business traffic changes. A learning period with an active attack or an unusual peak can create unrealistic thresholds.
-
-### Limits
-An on-premises device can't help if the attack fills your internet link before reaching it. Volumetric attacks often need upstream or cloud scrubbing, so a hybrid design is common.`,
         concepts: ["Volumetric, protocol, application", "SYN flood", "SPP", "Adaptive threshold", "Detection then prevention", "Upstream scrubbing"], sources: ["https://docs.fortinet.com/product/fortiddos-be/5.7"],
         questions: [
           { d: "ADVANCED", topic: "Limits", tech: "FortiDDoS", p: "A 10 Gbps internet link is saturated by a 40 Gbps flood, and an on-premises DDoS appliance behind the link is working correctly. What is the main problem?", a: [["The link is full before traffic reaches the appliance, so upstream scrubbing is needed", "On-premises mitigation can't create bandwidth upstream."], ["The appliance needs another SPP", "It can't fix a saturated upstream link."], ["The attack must be application-layer", "A flood of this size points to volumetric."], ["DNS caching should be off", "This doesn't address the link saturation."]], c: [0], e: "A hybrid design pairs local mitigation with an upstream service." },
