@@ -11,6 +11,7 @@ datasource db {
 
 enum UserRole {
   STUDENT
+  CONTENT_EDITOR
   ADMIN
 }
 
@@ -47,6 +48,8 @@ model User {
   quizSessions         QuizSession[]
   attempts             Attempt[]
   labCompletions       LabCompletion[]
+  nseAttempts          NseExamAttempt[]
+  nseModuleProgress    NseModuleProgress[]
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 }
@@ -238,4 +241,215 @@ model DailyStat {
 
   @@id([day, metric, dimension])
   @@index([metric, day])
+}
+
+// Fortinet NSE programme. These tables are separate from Question and QuizSession because NSE needs multiple-select,
+// matching and ordering questions, editorial statuses and server-enforced deadlines, which the live quiz engine lacks.
+enum NseContentStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+}
+
+enum NseTrack {
+  SECURE_NETWORKING
+  SECURITY_OPERATIONS
+  SASE
+  CLOUD_SECURITY
+}
+
+enum NseDifficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum NseQuestionType {
+  SINGLE
+  MULTIPLE
+  MATCHING
+  ORDERING
+}
+
+enum NseExamMode {
+  PRACTICE
+  MOCK
+  READINESS
+}
+
+model NsePathway {
+  id               String           @id @default(cuid())
+  slug             String           @unique
+  level            Int
+  track            NseTrack?
+  title            String
+  summary          String
+  overview         String
+  prerequisites    String[]
+  objectives       String[]
+  // Exam names as listed by Fortinet.
+  officialExams    String[]
+  officialUrl      String
+  // Only set when Fortinet publishes the figures; otherwise the page says they could not be verified.
+  officialSpec     String?
+  productVersion   String?
+  // CertMastery's own mock settings, always labelled as ours.
+  mockQuestions    Int              @default(40)
+  mockMinutes      Int              @default(60)
+  questionTarget   Int              @default(0)
+  sortOrder        Int
+  status           NseContentStatus @default(DRAFT)
+  sourcesCheckedAt DateTime?
+  modules          NseModule[]
+  labs             NseLab[]
+  attempts         NseExamAttempt[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@unique([level, track])
+  @@index([status, sortOrder])
+}
+
+model NseModule {
+  id             String              @id @default(cuid())
+  pathwayId      String
+  slug           String
+  title          String
+  summary        String
+  objectives     String[]
+  notes          String
+  keyConcepts    String[]
+  exercise       String?
+  sources        String[]
+  productVersion String?
+  // Share of mock exam questions drawn from this module.
+  weight         Int                 @default(10)
+  sortOrder      Int
+  status         NseContentStatus    @default(DRAFT)
+  // Null until a qualified person has reviewed it; never set by the seed.
+  lastReviewedAt DateTime?
+  pathway        NsePathway          @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+  questions      NseQuestion[]
+  progress       NseModuleProgress[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([pathwayId, slug])
+  @@index([pathwayId, status, sortOrder])
+}
+
+model NseQuestion {
+  id          String           @id @default(cuid())
+  // Stable key for seeded and imported content, so re-running a seed never overwrites an editor's changes.
+  sourceKey   String?          @unique
+  moduleId    String
+  type        NseQuestionType  @default(SINGLE)
+  difficulty  NseDifficulty    @default(INTERMEDIATE)
+  prompt      String
+  // Configuration extract, CLI output or case study shown above the prompt.
+  exhibit     String?
+  explanation String
+  technology  String
+  topic       String
+  reference   String?
+  status      NseContentStatus @default(DRAFT)
+  reviewNotes String?
+  module      NseModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  options     NseOption[]
+  examItems   NseExamItem[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([moduleId, status, difficulty])
+}
+
+model NseOption {
+  id         String      @id @default(cuid())
+  questionId String
+  label      String
+  text       String
+  // Why this option is right or wrong.
+  rationale  String
+  isCorrect  Boolean     @default(false)
+  // ORDERING: this item's place in the correct sequence, from 1.
+  position   Int?
+  // MATCHING: the target this item belongs with.
+  matchTo    String?
+  question   NseQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, label])
+}
+
+model NseExamAttempt {
+  id             String        @id @default(cuid())
+  userId         String
+  pathwayId      String
+  moduleId       String?
+  mode           NseExamMode
+  totalQuestions Int
+  correctAnswers Int           @default(0)
+  startedAt      DateTime      @default(now())
+  // Enforced by the server. Null means untimed.
+  deadlineAt     DateTime?
+  submittedAt    DateTime?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pathway        NsePathway    @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+  items          NseExamItem[]
+
+  @@index([userId, pathwayId, submittedAt])
+}
+
+model NseExamItem {
+  id          String         @id @default(cuid())
+  attemptId   String
+  questionId  String
+  sortOrder   Int
+  // Display order of options, fixed for the attempt so a reload doesn't reshuffle them.
+  optionOrder String[]
+  response    Json?
+  flagged     Boolean        @default(false)
+  isCorrect   Boolean?
+  answeredAt  DateTime?
+  attempt     NseExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question    NseQuestion    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@unique([attemptId, sortOrder])
+  @@index([questionId, isCorrect])
+}
+
+model NseModuleProgress {
+  userId      String
+  moduleId    String
+  completedAt DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module      NseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, moduleId])
+}
+
+// Completion is stored in LabCompletion with the slug prefixed "nse:".
+model NseLab {
+  id              String           @id @default(cuid())
+  slug            String           @unique
+  pathwayId       String
+  title           String
+  difficulty      NseDifficulty
+  durationMinutes Int
+  summary         String
+  objectives      String[]
+  scenario        String
+  topology        String
+  equipment       String
+  // Tasks, starting configuration and scripted diagnostics; see src/lib/nse/lab-engine.ts.
+  definition      Json
+  troubleshooting String[]
+  sortOrder       Int
+  status          NseContentStatus @default(DRAFT)
+  pathway         NsePathway       @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status, sortOrder])
 }

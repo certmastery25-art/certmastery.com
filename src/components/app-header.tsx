@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/certifications", label: "Certifications" },
+  { href: "/fortinet", label: "Fortinet NSE" },
   { href: "/practice", label: "Practice tests" },
   { href: "/labs", label: "Hands-on labs" },
   { href: "/history", label: "My progress" },
@@ -23,7 +24,9 @@ export function AppHeader() {
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  const navLinks = session?.user.role === "ADMIN" ? [...links, { href: "/admin", label: "Admin" }] : links;
+  const navLinks = session?.user.role === "ADMIN"
+    ? [...links, { href: "/admin", label: "Admin" }, { href: "/studio", label: "NSE Studio" }]
+    : session?.user.role === "CONTENT_EDITOR" ? [...links, { href: "/studio", label: "NSE Studio" }] : links;
 
   return (
     <header className="app-header">

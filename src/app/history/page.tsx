@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { ProgressDashboard, type LabProgress } from "@/components/progress-dashboard";
 import { authOptions } from "@/lib/auth";
@@ -18,5 +19,5 @@ export default async function HistoryPage() {
     return { slug: lab.slug, title: lab.title, durationMinutes: lab.durationMinutes, completedAt: completion?.completedAt.toISOString() ?? null };
   });
 
-  return <main className="main-content inner-page history-page"><div className="page-heading"><p className="eyebrow">My progress</p><h1>Your progress, in focus.</h1><p>See what is sticking, spot the gaps, and decide where to put your next study block.</p></div><ProgressDashboard labs={labs} /></main>;
+  return <main className="main-content inner-page history-page"><div className="page-heading"><p className="eyebrow">My progress</p><h1>Your progress, in focus.</h1><p>See what is sticking, spot the gaps, and decide where to put your next study block.</p></div><p className="nse-history-link"><Link className="text-link" href="/fortinet/dashboard">See your Fortinet NSE progress and readiness</Link></p><ProgressDashboard labs={labs} /></main>;
 }

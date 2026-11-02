@@ -7,13 +7,31 @@ function isAccountOnlyPath(pathname: string) {
     || pathname.startsWith("/labs/")
     || pathname.startsWith("/api/labs/")
     || pathname.startsWith("/quiz/")
+    || pathname.startsWith("/fortinet/exam/")
+    || pathname.startsWith("/fortinet/labs/")
+    || pathname === "/fortinet/dashboard"
+    || pathname.startsWith("/api/nse/")
     || pathname === "/api/questions"
     || pathname.startsWith("/api/quizzes")
     || pathname === "/api/attempts";
 }
 
+// Browsers always send Origin on cross-site POSTs, so NSE writes from other sites can be refused outright.
+function isCrossSiteNseWrite(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (["GET", "HEAD", "OPTIONS"].includes(request.method) || !(pathname.startsWith("/api/nse/") || pathname.startsWith("/api/nse-studio/"))) return false;
+  const origin = request.headers.get("origin");
+  if (!origin) return false;
+  try {
+    return new URL(origin).host !== request.headers.get("host");
+  } catch {
+    return true;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (isCrossSiteNseWrite(request)) return NextResponse.json({ error: "Cross-site request refused." }, { status: 403 });
   if (!isAccountOnlyPath(pathname)) return NextResponse.next();
 
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });

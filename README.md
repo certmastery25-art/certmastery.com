@@ -32,6 +32,19 @@ Visit `http://localhost:3000`. The idempotent seed contains five certifications,
 
 Email and password registration/sign-in work locally. Google sign-in is optional: create OAuth credentials, add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `.env`, set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED="true"`, and add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI in Google Cloud Console.
 
+## Fortinet NSE Academy
+
+`/fortinet` holds the NSE 1 to 7 programme: 16 pathways, study modules, an exam simulator, simulated FortiOS labs and a readiness dashboard. Editors manage content at `/studio`.
+
+- **Content** lives in the `Nse*` tables. `prisma/nse/` holds the first batch of original content; `npm run db:seed-nse` inserts whatever is missing and never edits existing rows or other certifications.
+- **Exams** (`/api/nse/exams`) are marked on the server. Correct answers aren't sent until a mock or readiness exam is submitted, or until a practice question is answered. Mock deadlines are enforced by the server.
+- **Marking** gives credit only for fully correct answers, which matches Fortinet's stated exam marking.
+- **Labs** run a learning simulator (`src/lib/nse/lab-engine.ts`), not FortiOS. Completion is confirmed by replaying the typed commands on the server.
+- **Roles:** `CONTENT_EDITOR` can create and edit content at `/studio`; only `ADMIN` can publish it. Set a user's role in the database.
+- **Official figures:** only put exam durations, question counts and weightings in a pathway after checking Fortinet's own pages. Mock settings are always labelled as CertMastery's.
+- **Review:** a module's `lastReviewedAt` stays empty until a qualified person marks it reviewed in the studio. Students see the review status.
+- **Tests:** `npm test` runs the unit tests. `npm run test:e2e` needs the local docker-compose database, migrated and seeded with both `npm run db:seed` and `npm run db:seed-nse`.
+
 ## Database
 
 Development and production both use Neon PostgreSQL through `prisma/schema.prisma` and the Neon driver adapter. The schema contains users, NextAuth accounts/sessions, certifications, domains, questions/options, quiz sessions, ordered quiz questions, attempts, and saved lab completions.

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
-import { ArrowRight, BarChart3, BookOpenCheck, CheckCircle2, Clock3, ListChecks, Network, SlidersHorizontal, Target, Terminal } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpenCheck, CheckCircle2, Clock3, ListChecks, Network, SlidersHorizontal, Target, Terminal, ShieldCheck } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { certificationIcon } from "@/lib/cert-icons";
+import { listPublishedPathways, pathwayQuestionCount } from "@/lib/nse/progress";
 import { ccnaLabs, createLabState, promptForState, runLabCommand } from "@/lib/labs/ccna";
 import { prisma } from "@/lib/prisma";
 
@@ -41,12 +42,13 @@ function labPreview() {
 }
 
 export default async function Home() {
-  const [session, certifications] = await Promise.all([
+  const [session, certifications, pathways] = await Promise.all([
     getServerSession(authOptions),
     prisma.certification.findMany({
       orderBy: { name: "asc" },
       include: { domains: { orderBy: { sortOrder: "asc" }, select: { id: true, name: true, _count: { select: { questions: true } } } } },
     }),
+    listPublishedPathways(),
   ]);
   const attempts = session?.user.id
     ? await prisma.attempt.findMany({ where: { userId: session.user.id }, select: { isCorrect: true } })
@@ -55,7 +57,8 @@ export default async function Home() {
   const accuracy = answered ? Math.round((attempts.filter((attempt) => attempt.isCorrect).length / answered) * 100) : 0;
   const displayName = session?.user.name?.split(" ")[0];
   const questionCount = (certification: (typeof certifications)[number]) => certification.domains.reduce((sum, domain) => sum + domain._count.questions, 0);
-  const totalQuestions = certifications.reduce((sum, certification) => sum + questionCount(certification), 0);
+  const nseQuestions = pathways.reduce((sum, pathway) => sum + pathwayQuestionCount(pathway), 0);
+  const totalQuestions = certifications.reduce((sum, certification) => sum + questionCount(certification), 0) + nseQuestions;
   const previewCert = certifications.find((certification) => certification.slug === "security-plus") ?? certifications[0];
   const firstLab = ccnaLabs[0];
 
@@ -78,7 +81,7 @@ export default async function Home() {
                 <div><dt>Your record</dt><dd><Link href="/history" className="text-link">View progress <ArrowRight size={14} /></Link></dd></div>
               </dl>
             ) : (
-              <p className="hero-note"><CheckCircle2 size={16} /> Free account. {totalQuestions.toLocaleString("en-US")} original questions across {certifications.length} certifications.</p>
+              <p className="hero-note"><CheckCircle2 size={16} /> Free account. {totalQuestions.toLocaleString("en-US")} original questions across {certifications.length + pathways.length} certifications.</p>
             )}
           </div>
 
@@ -130,6 +133,18 @@ export default async function Home() {
                 </article>
               );
             })}
+            {pathways.length > 0 && (
+              <article className="cert-card">
+                <div className="cert-card-top"><span className="cert-symbol"><ShieldCheck size={19} /></span><span className="exam-code">NSE 1 to 7</span></div>
+                <h3>Fortinet NSE</h3>
+                <p className="cert-name">Fortinet NSE Certification Academy</p>
+                <div className="cert-card-footer">
+                  <span>{nseQuestions} questions · {pathways.length} pathways</span>
+                  <span className="tag tag-mint"><Network size={13} /> Labs</span>
+                </div>
+                <Link className="cert-card-cta" href="/fortinet">Start studying <ArrowRight size={16} /><span className="sr-only"> for Fortinet NSE</span></Link>
+              </article>
+            )}
           </div>
         </div>
       </section>

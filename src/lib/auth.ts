@@ -70,7 +70,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as "STUDENT" | "ADMIN";
+        session.user.role = token.role as "STUDENT" | "CONTENT_EDITOR" | "ADMIN";
         session.user.accessTier = token.accessTier as "FREE" | "PREMIUM";
       }
       return session;

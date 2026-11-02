@@ -20,7 +20,7 @@ export function SiteFooter() {
       </div>
       <div className="container site-footer-legal">
         <span>© {new Date().getFullYear()} CertMastery</span>
-        <span>Not affiliated with CompTIA, Cisco or Splunk. Exam names are trademarks of their owners.</span>
+        <span>Not affiliated with CompTIA, Cisco, Splunk or Fortinet. Exam names are trademarks of their owners.</span>
       </div>
     </footer>
   );

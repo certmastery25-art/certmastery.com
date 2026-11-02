@@ -1,0 +1,332 @@
+import { DOCS, type SeedPathway } from "./types";
+
+const V = "FortiOS 7.6";
+
+export const nse4Pathway: SeedPathway = {
+  slug: "nse-4",
+  level: 4,
+  title: "NSE 4: FortiOS Administrator",
+  summary: "Configure, secure and troubleshoot FortiGate: policies, inspection, routing, SD-WAN, HA and IPsec.",
+  overview: "NSE 4 is the first proctored exam in the programme and a prerequisite for every level above it. The modules follow the five domains Fortinet publishes for the FortiOS 7.6 exam. A FortiOS 8.0 version is listed as coming soon, so check the exam page before you book. Fortinet requires every answer to be fully correct for credit, and CertMastery marks the same way.",
+  prerequisites: ["No certification is required, but Fortinet's exam assumes hands-on FortiGate experience. NSE 3 is good preparation."],
+  objectives: ["Deploy and maintain FortiGate, including logging and FGCP HA", "Build firewall policies, NAT and user authentication", "Apply SSL inspection and security profiles and fix common problems", "Configure static routing and SD-WAN", "Build and troubleshoot IPsec VPNs"],
+  officialExams: ["Fortinet NSE 4 - FortiOS 7.6 Administrator (available)", "Fortinet NSE 4 - FortiOS 8.0 Administrator (listed as coming soon)"],
+  officialPage: "fortios_administrator_exam",
+  officialSpec: "FortiOS 7.6 exam: 100 minutes, 50 to 55 questions, pass or fail. FortiOS 8.0 exam (coming soon): 100 minutes, 50 to 60 questions. Pass mark not published on the exam page. Checked 31 October 2026.",
+  version: V,
+  mock: [55, 100],
+  target: 500,
+  modules: [
+    {
+      slug: "deployment-system",
+      title: "Deployment and system configuration",
+      summary: "Initial setup, logging, FGCP high availability, resource problems, cloud and FortiSASE concepts.",
+      weight: 23,
+      version: V,
+      objectives: ["Upgrade firmware and handle backups safely", "Describe the log workflow and FortiAnalyzer registration", "Configure FGCP and predict primary election", "Diagnose high CPU, memory pressure and conserve mode"],
+      notes: `### Exam domain
+Fortinet weights this domain at 20 to 25 percent on the 7.6 exam.
+
+### Firmware and configuration
+Read the release notes and follow the supported upgrade path. Back up first, and keep the backup and the matching firmware together so you can roll back.
+
+### Logging
+FortiGate can log to disk where available, to memory, to FortiAnalyzer or to FortiGate Cloud. FortiAnalyzer receives logs over TCP 514 by default (OFTP) after the device is authorised there.
+\`\`\`
+config log fortianalyzer setting
+    set status enable
+    set server 10.0.0.50
+end
+\`\`\`
+
+### FGCP high availability
+FGCP clusters synchronise configuration and, if enabled, sessions. In active-passive mode one unit forwards traffic. Heartbeat links carry cluster traffic.
+\`\`\`
+config system ha
+    set mode a-p
+    set group-name "HQ"
+    set password <secret>
+    set hbdev "port3" 50 "port4" 50
+    set session-pickup enable
+    set override disable
+end
+\`\`\`
+**Primary election, with override disabled:** most connected monitored interfaces, then highest HA uptime, then highest priority, then highest serial number. **With override enabled**, priority is checked before uptime. Because override can trigger a failover whenever a unit returns, leave it disabled unless you have a reason.
+
+Without session-pickup, existing sessions don't survive failover and clients must reconnect.
+
+### Resources
+\`diagnose sys top\` shows busy processes and \`get system performance status\` gives a summary. **Conserve mode** starts when memory crosses the red threshold, which is 88 percent by default. FortiOS then limits new sessions and content inspection to protect itself. Whether traffic needing proxy inspection is dropped or passed uninspected depends on the \`av-failopen\` setting.
+
+### Cloud and SASE
+FortiGate VMs run in AWS and Azure and must follow cloud routing rules. FortiSASE delivers firewall and web gateway security from the cloud to remote users and is covered in the SASE track.`,
+      concepts: ["FGCP election order", "override", "session-pickup", "Heartbeat", "Conserve mode", "OFTP on TCP 514"],
+      exercise: "Do the High Availability and FortiAnalyzer integration labs. Before checking the answer, predict which unit becomes primary.",
+      sources: [DOCS.fortigate, DOCS.fortianalyzer, "https://training.fortinet.com/local/staticpage/view.php?page=fortios_administrator_exam"],
+      questions: [
+        { d: "ADVANCED", topic: "FGCP election", tech: "FGCP HA", p: "Both cluster members have all monitored interfaces up. HA override is disabled. Which unit becomes primary?", x: "Unit A: priority 200, HA uptime 2 hours\nUnit B: priority 100, HA uptime 3 days", a: [["Unit B, because uptime is compared before priority when override is disabled", "Monitored interfaces tie, so uptime decides next."], ["Unit A, because higher priority always wins", "Priority comes before uptime only when override is enabled."], ["The unit with the higher serial number", "Serial number is the last tie-breaker and isn't reached here."], ["Neither, because priorities must match", "Priorities may differ."]], c: [0], e: "With override disabled the order is monitored interfaces, uptime, priority, serial number. In practice small uptime differences are treated as equal (a 5-minute margin by default), but a difference of days is decisive." },
+        { d: "ADVANCED", topic: "FGCP election", tech: "FGCP HA", p: "An administrator wants the higher-priority unit to always return to the primary role when it rejoins, and accepts the extra failover. Which setting does this?", a: [["set override enable", "It moves priority ahead of uptime in the election."], ["set session-pickup enable", "This synchronises sessions and doesn't affect the election."], ["set hbdev with a higher value", "Heartbeat priority selects the link, not the primary unit."], ["set mode a-a", "That changes the HA mode rather than who becomes primary."]], c: [0], e: "Override causes a second interruption whenever the preferred unit returns, which is why it's often left disabled." },
+        { d: "INTERMEDIATE", topic: "Failover", tech: "FGCP HA", p: "After a cluster failover, users' existing FTP and SSH sessions all drop and must reconnect. New sessions work. Which setting is most likely missing?", a: [["session-pickup", "Without it, TCP sessions aren't synchronised to the other unit."], ["set group-name", "A wrong group name would stop the cluster forming at all."], ["set priority", "Priority affects who is primary, not session survival."], ["allowaccess https", "This is about management access."]], c: [0], e: "Session pickup synchronises the session table so eligible sessions survive failover." },
+        { d: "ADVANCED", topic: "Conserve mode", tech: "System resources", p: "A FortiGate shows this output and users report that web traffic is failing. What is the most likely state?", x: "FGT # diagnose hardware sysinfo conserve\nmemory conserve mode: on\ntotal RAM: 3040 MB\nmemory used: 2720 MB  89% of total RAM\nmemory used threshold extreme: 2888 MB  95% of total RAM\nmemory used threshold red: 2675 MB  88% of total RAM\nmemory used threshold green: 2492 MB  82% of total RAM", a: [["Conserve mode is active because memory passed the red threshold", "89 percent is above the 88 percent red threshold."], ["Extreme conserve mode is active", "Memory is below the 95 percent extreme threshold."], ["Memory has returned to normal because it's below extreme", "The state clears only below the green threshold."], ["CPU is the cause of conserve mode", "This output shows memory thresholds, which is what triggers it."]], c: [0], e: "Conserve mode exits only when memory drops under the green threshold, so a small drop below red doesn't end it." },
+        { type: "MULTIPLE", d: "INTERMEDIATE", topic: "Log destinations", tech: "Logging", p: "Which two commands help confirm that a FortiGate is sending logs to FortiAnalyzer? (Choose two.)", a: [["diagnose test application miglogd 6", "It shows the logging daemon's statistics, including sent and queued logs."], ["execute log fortianalyzer test-connectivity", "It tests the connection and registration status."], ["diagnose sys top", "This lists running processes, not log delivery."], ["get router info routing-table all", "A route may be relevant, but this doesn't confirm logging."]], c: [0, 1], e: "Test connectivity first, then look at daemon statistics to see whether logs are being sent or queued." },
+        { d: "BEGINNER", topic: "Firmware", tech: "FortiOS administration", p: "What should be done first before upgrading FortiOS on a production FortiGate?", a: [["Read the release notes, confirm the upgrade path and back up the configuration", "These steps prevent most upgrade failures and allow rollback."], ["Delete all firewall policies", "This would cause an outage and has no upgrade benefit."], ["Disable all interfaces", "This is not part of any standard upgrade procedure."], ["Factory reset the device", "A reset destroys the configuration and isn't required."]], c: [0], e: "Upgrades may require intermediate versions, so the release notes and upgrade path come first." },
+      ],
+    },
+    {
+      slug: "policies-authentication",
+      title: "Firewall policies and authentication",
+      summary: "Policy matching, NAT with VIPs and IP pools, LDAP, RADIUS and FSSO.",
+      weight: 23,
+      version: V,
+      objectives: ["Predict which policy matches and interpret flow debugging", "Configure VIPs, source NAT and IP pools", "Use LDAP and RADIUS with firewall authentication", "Compare FSSO DC agent and collector modes"],
+      notes: `### Exam domain
+Fortinet weights this domain at 20 to 25 percent on the 7.6 exam.
+
+### Debugging a flow
+The debug flow tool shows the decision for each packet, without needing to guess.
+\`\`\`
+diagnose debug reset
+diagnose debug flow filter addr 10.0.1.25
+diagnose debug flow show function-name enable
+diagnose debug flow trace start 20
+diagnose debug enable
+\`\`\`
+Messages to learn:
+- \`Denied by forward policy check (policy 0)\` means nothing matched.
+- \`reverse path check fail, drop\` means the route back to the source points out of a different interface (RPF).
+- \`iprope_in_check() check failed, drop\` commonly relates to traffic addressed to the FortiGate itself, such as management access not allowed.
+
+Turn debugging off afterwards with \`diagnose debug disable\`.
+
+### Inbound NAT with VIPs
+A VIP maps a public address to an internal server. DNAT happens **before** the policy check, and the policy's destination is the VIP object.
+\`\`\`
+config firewall vip
+    edit "WEB-VIP"
+        set extip 203.0.113.10
+        set extintf "port1"
+        set mappedip "10.0.2.10"
+        set portforward enable
+        set extport 443
+        set mappedport 443
+    next
+end
+\`\`\`
+
+### Outbound NAT
+\`set nat enable\` uses the egress interface address by default. An **IP pool** gives a different address or range. Choose \`overload\` for many-to-one, or \`one-to-one\` when each client needs its own.
+
+### Users and FSSO
+Firewall authentication can be **active** (the user is prompted) or **passive** (identity is learned from a source such as FSSO). Test a remote server with:
+\`\`\`
+diagnose test authserver ldap <server> <user> <password>
+\`\`\`
+**FSSO** learns Windows logons. In **DC agent mode**, an agent on each domain controller reports logons to a collector agent. This scales best and is the most accurate. In **polling mode**, the collector reads logs from the DCs, with no agent on them but more delay and possible missed logons. The FortiGate connects to the collector on TCP 8000 by default.`,
+      concepts: ["debug flow", "Reverse path forwarding", "VIP before policy", "IP pool types", "Active vs passive authentication", "FSSO DC agent vs polling"],
+      exercise: "Do the NAT lab and the troubleshooting lab. Read every debug message before changing anything.",
+      sources: [DOCS.fortigate],
+      questions: [
+        { d: "ADVANCED", topic: "Flow debug", tech: "Diagnostics", p: "What is the cause of this drop?", x: "id=20085 trace_id=7 func=print_pkt_detail line=5845 msg=\"vd-root:0 received a packet(proto=1, 10.20.0.5:1->10.0.2.10:2048) from port5. type=8, code=0, id=1, seq=9.\"\nid=20085 trace_id=7 func=vf_ip_route_input_common line=2591 msg=\"reverse path check fail, drop\"", a: [["The route back to 10.20.0.5 doesn't point through port5", "RPF failed: the source isn't reachable via the arrival interface."], ["No policy allows the ICMP traffic", "That would appear as a forward policy check message."], ["The FortiGate is in conserve mode", "This message is specific to a routing check."], ["ICMP is disabled in allowaccess", "allowaccess relates to traffic addressed to the FortiGate itself."]], c: [0], e: "Fix the route to 10.20.0.0/16 via port5, or an asymmetric design, instead of editing policy." },
+        { d: "ADVANCED", topic: "Flow debug", tech: "Diagnostics", p: "A new server should be reachable from the DMZ. Debug flow shows this message. What should be checked next?", x: "msg=\"Denied by forward policy check (policy 0)\"", a: [["Whether any policy matches the source, destination, interfaces and service", "Policy 0 means none matched."], ["Whether the DMZ interface is physically up", "The packet arrived and reached the policy stage."], ["Whether a route exists back to the DMZ", "An RPF failure gives a different, earlier message."], ["Whether antivirus blocked the file", "A profile only acts after a policy has matched."]], c: [0], e: "Policy lookup failed. A common cause is wrong interface pairs or a service mismatch rather than a missing policy altogether." },
+        { d: "INTERMEDIATE", topic: "VIP", tech: "NAT", p: "A VIP maps 203.0.113.10 to 10.0.2.10. Which destination should the inbound firewall policy use?", a: [["The VIP object", "Policies reference the VIP so the FortiGate performs the DNAT for that traffic."], ["all, with no VIP referenced", "Without the VIP in a policy, this mapping isn't applied by an ordinary policy."], ["The WAN interface's address object", "The destination to match is the VIP."], ["An IP pool", "IP pools are used for source NAT."]], c: [0], e: "A VIP in the policy destination links the policy to the mapping." },
+        { d: "EXPERT", topic: "NAT troubleshooting", tech: "NAT", p: "Internal users in 10.0.2.0/24 browse to the public address of a server in the same subnet. A VIP maps it to 10.0.2.10, and the hairpin policy on port3 (in and out) has NAT disabled. The TCP handshake never completes. Why?", x: "Client 10.0.2.25, gateway 10.0.2.1 (FortiGate port3)\nServer 10.0.2.10, gateway 10.0.2.1\nVIP: 203.0.113.10 maps to 10.0.2.10", a: [["The server replies directly to the client, so the client gets a response from an unexpected address; enable source NAT on the policy", "With SNAT, the server replies to the FortiGate, keeping both directions in the session."], ["VIPs can't be used for traffic from an internal interface", "A VIP can be matched internally when its external interface permits it."], ["The server's gateway must be the VIP address", "A VIP isn't a gateway."], ["A second VIP is needed for the reverse direction", "The session handles replies, and the real problem is the asymmetric path."]], c: [0], e: "The client sent its SYN to 203.0.113.10, but the same-subnet server answers from 10.0.2.10 directly, so the client discards it. Source NAT forces the reply back through the FortiGate." },
+        { type: "MATCHING", d: "INTERMEDIATE", topic: "IP pools", tech: "NAT", p: "Match each requirement to an IP pool type.", a: [["Many clients share one public address", "overload", "Overload uses port translation so many clients can share an address."], ["Each client needs its own public address, with no port sharing", "one-to-one", "One-to-one assigns one external address per client."], ["Each client must keep a consistent block of ports for logging", "fixed-port-range", "A fixed port range maps a client range to a predictable port range."]], e: "The choice depends on how many addresses you have and on your logging requirements." },
+        { d: "INTERMEDIATE", topic: "FSSO", tech: "Authentication", p: "Which statement correctly compares FSSO DC agent mode and polling mode?", a: [["DC agent mode needs an agent on domain controllers, while polling needs none but may be slower or miss logons", "This is the main trade-off."], ["Polling mode installs an agent on every workstation", "Neither mode installs a workstation agent."], ["DC agent mode requires no collector agent", "Standard DC agent mode reports to a collector agent."], ["Polling is always more accurate", "DC agent mode captures logon events more reliably."]], c: [0], e: "Polling is easier to deploy, while DC agent mode is generally more scalable and timely." },
+        { d: "INTERMEDIATE", topic: "LDAP", tech: "Authentication", p: "Which command checks a remote LDAP server's response to a specific user's credentials from the FortiGate?", a: [["diagnose test authserver ldap <server> <user> <password>", "It tests that named server with the given credentials."], ["execute ping <server>", "Ping confirms reachability but doesn't check authentication."], ["diagnose sniffer packet any ldap 4", "A sniffer shows packets but doesn't test credentials."], ["get system status", "This shows device information."]], c: [0], e: "Testing authentication directly separates a server issue from a policy issue." },
+      ],
+    },
+    {
+      slug: "content-inspection",
+      title: "Content inspection",
+      summary: "SSL inspection, flow and proxy modes, web filtering, application control, antivirus and IPS.",
+      weight: 28,
+      version: V,
+      objectives: ["Deploy full SSL inspection and resolve certificate issues", "Compare flow-based and proxy-based inspection", "Troubleshoot web filtering and application control", "Tune IPS and handle high CPU use"],
+      notes: `### Exam domain
+This is the heaviest domain, at 25 to 30 percent on the 7.6 exam.
+
+### SSL/SSH inspection
+- **Certificate inspection** reads the server name and certificate only. It supports category filtering without a client CA.
+- **Full inspection** decrypts the traffic. Clients must trust the CA in the profile; use a **private CA** in production so you control trust. Exempt sensitive categories where required, and expect applications that pin their certificates to fail.
+
+### Flow and proxy
+**Flow-based** is the default on a new policy. It inspects packets as they pass, using fewer resources. **Proxy-based** buffers content for fuller inspection and adds latency. Some features are available only in proxy mode; check the current FortiOS documentation for your version. The mode is set on the firewall policy:
+\`\`\`
+config firewall policy
+    edit 1
+        set inspection-mode proxy
+    next
+end
+\`\`\`
+
+### Web filtering order
+Static URL filter entries are checked first. FortiGuard category results then apply. A site can be blocked by its **category** even though you never listed it. Use \`diagnose debug urlfilter\` tools and **web filter logs** to find the reason. FortiGuard rating lookups need working connectivity: if category filtering suddenly fails, check \`diagnose debug rating\`.
+
+### Application control
+Sensors match applications from signatures. Allowing an application may require allowing its dependencies. Applications sent over TLS may need deep inspection to be identified precisely, especially to control sub-features.
+
+### Antivirus
+Protocols to scan are set in protocol options. **Flow** and **proxy** antivirus differ in how they buffer files. Files that exceed the configured limit in protocol options (oversize files) are passed or blocked according to that setting.
+
+### IPS
+A sensor filters signatures by severity, target and OS. Blocking everything wastes CPU and increases false positives, so select only what your assets need. To investigate high CPU, look for \`ipsengine\` in \`diagnose sys top\`. \`diagnose test application ipsmonitor\` has options to help, including restarting the engine, and it should be used carefully on a production unit.`,
+      concepts: ["Private CA", "Pinning", "Flow vs proxy", "Static URL filter first", "FortiGuard rating", "IPS sensor tuning"],
+      exercise: "Do the web filtering, application control and intrusion prevention labs.",
+      sources: [DOCS.fortigate],
+      questions: [
+        { d: "INTERMEDIATE", topic: "SSL inspection", tech: "SSL/SSH inspection", p: "An organisation applies deep inspection, deploys its private CA to managed PCs and sees that a mobile banking app stops working while browsers are fine. What is the most likely reason?", a: [["The app pins its certificate and rejects the re-signed certificate", "Pinning rejects any certificate other than the one expected, even if the CA is trusted by the OS."], ["The FortiGate has no default route", "Browsers still work, so routing is fine."], ["The private CA has expired", "Browsers would also fail."], ["Flow inspection can't process mobile apps", "The issue is trust in the re-signed certificate."]], c: [0], e: "Add a suitable exemption for pinned applications. Sensitive categories such as finance may also need exempting by policy." },
+        { d: "INTERMEDIATE", topic: "Inspection", tech: "SSL/SSH inspection", p: "What can certificate inspection do that makes it useful without a client CA?", a: [["Apply category filtering based on the server name and certificate", "These details are visible without decryption."], ["Scan downloaded files for malware", "Files stay encrypted."], ["Filter on a full URL path", "The path isn't visible."], ["Detect exploits inside the encrypted payload", "The payload isn't visible."]], c: [0], e: "It's a lightweight option, but anything inside the encrypted stream remains invisible." },
+        { d: "ADVANCED", topic: "Web filtering", tech: "Web filter", p: "A web filter profile has this configuration. A user browses to https://files.example.com. FortiGuard rates it File Sharing, which is set to block. What happens?", x: "URL filter (static):\n  *.example.com    wildcard    action: exempt\nFortiGuard category File Sharing: block\nSSL profile: deep-inspection", a: [["Access is allowed, because the exempt URL filter entry bypasses further web filter checks", "Static URL filtering runs first, and exempt skips later checks."], ["It is blocked, because categories always take priority", "Static URL filter is evaluated before the FortiGuard category."], ["It is blocked, because wildcards can't match subdomains", "This pattern matches subdomains."], ["It is allowed only if antivirus is disabled", "The antivirus setting doesn't affect this outcome. An exempt can skip antivirus for the traffic, not the other way round."]], c: [0], e: "Use exempt carefully, because it also skips other inspection. An allow action, by contrast, continues to subsequent checks." },
+        { d: "ADVANCED", topic: "Web filtering", tech: "FortiGuard", p: "Category filtering suddenly stops working for a site with no URL filter entry, while configuration hasn't changed. Which command is the most useful next check?", a: [["diagnose debug rating", "It shows the FortiGuard rating servers and their status."], ["get system ha status", "HA status doesn't cover rating connectivity."], ["diagnose vpn tunnel list", "This is about VPN tunnels."], ["execute factory-reset", "This is destructive and not diagnostic."]], c: [0], e: "If rating servers can't be reached, category lookups fail. Check licensing, DNS and connectivity to FortiGuard too." },
+        { type: "MULTIPLE", d: "ADVANCED", topic: "Flow vs proxy", tech: "Inspection modes", p: "Which two statements about flow-based and proxy-based inspection are correct? (Choose two.)", a: [["The inspection mode is selected on the firewall policy", "This is where inspection-mode is set."], ["Proxy-based inspection buffers content, adding some latency", "Buffering is the trade-off for fuller inspection."], ["Flow-based inspection always uses more memory than proxy", "Flow is generally the lighter option."], ["Flow-based inspection disables IPS", "IPS works in both modes."]], c: [0, 1], e: "Pick the mode from the features you need and the performance you can accept." },
+        { d: "ADVANCED", topic: "IPS", tech: "IPS", p: "A FortiGate has high CPU and ipsengine processes at the top of diagnose sys top after an all-signatures sensor was applied to every policy. What is the best long-term fix?", a: [["Tune the sensor to the signatures relevant to the protected systems", "Fewer relevant signatures reduce the load and false positives."], ["Remove the FortiGuard subscription", "This removes updates without solving the cause."], ["Reboot the FortiGate every night", "It temporarily masks the problem."], ["Turn off all logging only", "Logging isn't the main cost shown here."]], c: [0], e: "Select signatures by the OS, application and direction you actually protect." },
+        { type: "MATCHING", d: "INTERMEDIATE", topic: "Log interpretation", tech: "Security profiles", p: "Match each user complaint to where you'd look first.", a: [["A category block page appears for a site", "Web filter log", "It records the category and action."], ["A download is removed and replaced with a message", "Antivirus log", "It records the detected file and action."], ["An application is blocked though the site opens", "Application control log", "It records the matching application signature."]], e: "Security logs usually name the exact profile and reason. Check them before changing a policy." },
+      ],
+    },
+    {
+      slug: "routing-sdwan",
+      title: "Routing and SD-WAN",
+      summary: "Route selection, redundancy, ECMP and SD-WAN rules, zones and SLAs.",
+      weight: 13,
+      version: V,
+      objectives: ["Predict route selection using distance and priority", "Configure SD-WAN zones, members, SLA checks and rules", "Explain how SD-WAN rules interact with the routing table"],
+      notes: `### Exam domain
+Fortinet weights this domain at 10 to 15 percent on the 7.6 exam.
+
+### Static route selection
+- The **FIB** holds active routes used for forwarding and the **RIB** holds candidates.
+- The most **specific prefix** wins first. Among identical prefixes, lower **distance** wins and the default for a static route is 10.
+- Static routes with the same prefix and distance but different **priority**: all are in the table, and the lowest priority value is preferred.
+- Same distance and same priority gives **ECMP**.
+
+\`get router info routing-table all\` shows active routes. \`get router info routing-table database\` also shows inactive candidates.
+
+### SD-WAN components
+Members belong to **zones**. Firewall policies refer to zones. **Performance SLAs** measure latency, jitter and packet loss. **Rules** decide which member is used.
+
+\`\`\`
+config system sdwan
+    set status enable
+    config zone
+        edit "underlay"
+        next
+    end
+    config members
+        edit 1
+            set interface "port1"
+            set gateway 203.0.113.1
+            set zone "underlay"
+        next
+        edit 2
+            set interface "port2"
+            set gateway 198.51.100.1
+            set zone "underlay"
+        next
+    end
+    config health-check
+        edit "internet"
+            set server "8.8.8.8"
+            set protocol ping
+            set members 1 2
+            config sla
+                edit 1
+                    set latency-threshold 100
+                    set jitter-threshold 30
+                    set packetloss-threshold 2
+                next
+            end
+        next
+    end
+end
+\`\`\`
+Rule strategies include **Manual**, **Best Quality** and **Lowest Cost (SLA)**, plus **Maximize Bandwidth (SLA)**.
+
+### Key behaviour
+A rule can use a member only if the routing table has a suitable route through it. If there's no route for the destination via that member, the rule can't send traffic there. Traffic that matches no rule falls to the **implicit rule**, which uses normal routing and ECMP behaviour. Existing sessions generally stay on their original path unless a setting or event moves them.
+
+Diagnostics:
+\`\`\`
+diagnose sys sdwan health-check
+diagnose sys sdwan service
+\`\`\``,
+      concepts: ["Longest prefix", "Distance vs priority", "ECMP", "RIB vs FIB", "SD-WAN zone", "Performance SLA", "Implicit rule"],
+      exercise: "Do the static routing and SD-WAN labs.",
+      sources: [DOCS.fortigate],
+      questions: [
+        { d: "ADVANCED", topic: "Route selection", tech: "Routing", p: "Which path is used for traffic to 10.5.5.5?", x: "S 10.5.0.0/16 [10/0] via 192.0.2.1, port1\nS 10.5.5.0/24 [20/0] via 198.51.100.1, port2\nS 0.0.0.0/0 [5/0] via 203.0.113.1, port3", a: [["port2, because /24 is the longest matching prefix", "Prefix length is compared before distance."], ["port3, because it has the lowest distance", "Distance only compares identical prefixes."], ["port1, because it has the lowest distance of the 10.5 routes", "Distance doesn't apply across different prefixes."], ["ECMP across all three", "ECMP requires identical prefix, distance and priority."]], c: [0], e: "Longest prefix match comes first. Distance applies only between routes to the same prefix." },
+        { d: "ADVANCED", topic: "Route priority", tech: "Routing", p: "Two static default routes have distance 10. Route A has priority 0 and route B has priority 5. What happens?", a: [["Both are active, and A is preferred for new traffic", "Same distance keeps both in the table, and lower priority wins."], ["Only B is active, because higher priority wins", "A lower value is preferred."], ["ECMP splits traffic equally", "ECMP also needs equal priority."], ["The configuration is rejected", "This is a valid and common design."]], c: [0], e: "Unlike a higher-distance backup, a higher-priority-value route remains in the routing table, which matters for RPF and policy routes." },
+        { d: "EXPERT", topic: "SD-WAN", tech: "SD-WAN", p: "An SD-WAN rule steers 10.8.0.0/16 to member 2, but traffic uses member 1 even though member 2's SLA is healthy. What is the most likely cause?", x: "Routing table:\nS 10.8.0.0/16 [10/0] via 203.0.113.1, port1\nS 0.0.0.0/0 [1/0] via 198.51.100.1, port2\n\nMember 1 = port1, member 2 = port2", a: [["port1's /16 route is the best match, and port2 has no equally specific route to the destination", "A member needs a valid best route for the destination, and this prefix is reached only through port1."], ["SLA targets always override the routing table", "An SD-WAN rule can't use a member with no qualifying route."], ["The implicit rule is always evaluated first", "Configured rules are checked first."], ["Zones can't include two members", "Zones can contain many members."]], c: [0], e: "Add the 10.8.0.0/16 route for port2, typically through the SD-WAN zone, instead of per-interface routes." },
+        { type: "MATCHING", d: "ADVANCED", topic: "SD-WAN strategies", tech: "SD-WAN", p: "Match each goal to a rule strategy.", a: [["Always use a named preferred link if it's up", "Manual", "Manual uses the configured order."], ["Pick the link with the best measured latency", "Best Quality", "It selects from health-check measurements."], ["Use the cheapest link that meets the SLA", "Lowest Cost (SLA)", "It prefers lower cost among members meeting the target."], ["Spread sessions across links meeting the SLA", "Maximize Bandwidth (SLA)", "It distributes across qualifying members."]], e: "The strategy expresses the business intent. Measurements alone don't decide a Manual rule." },
+        { d: "INTERMEDIATE", topic: "SD-WAN", tech: "SD-WAN", p: "Which command shows SLA measurements for each SD-WAN member?", a: [["diagnose sys sdwan health-check", "It displays latency, jitter, packet loss and state."], ["get system status", "This shows device status."], ["diagnose sys session list", "It lists sessions, not SLA results."], ["execute traceroute", "It shows one path, not SLA measurements."]], c: [0], e: "Combine it with diagnose sys sdwan service to see which member a rule currently selects." },
+      ],
+    },
+    {
+      slug: "vpn",
+      title: "IPsec VPN",
+      summary: "IKE, site-to-site and remote access IPsec, redundancy and troubleshooting.",
+      weight: 13,
+      version: V,
+      objectives: ["Explain IKE phases 1 and 2", "Build a route-based site-to-site VPN", "Diagnose negotiation and traffic failures", "Understand the SSL VPN changes in FortiOS 7.6.3"],
+      notes: `### Exam domain
+Fortinet weights this domain at 10 to 15 percent on the 7.6 exam.
+
+### IKE
+Phase 1 authenticates the peers and builds a secure channel (IKE SA). Phase 2 negotiates the SAs that carry traffic. IKE uses UDP 500, moving to UDP 4500 for NAT traversal. IKEv2 replaces the main and aggressive modes of IKEv1 and uses fewer messages.
+
+### Route-based site-to-site
+\`\`\`
+config vpn ipsec phase1-interface
+    edit "to-branch"
+        set interface "port1"
+        set ike-version 2
+        set peertype any
+        set proposal aes256-sha256
+        set remote-gw 198.51.100.2
+        set psksecret <secret>
+    next
+end
+config vpn ipsec phase2-interface
+    edit "to-branch-p2"
+        set phase1name "to-branch"
+        set proposal aes256-sha256
+        set src-subnet 10.1.0.0 255.255.255.0
+        set dst-subnet 10.2.0.0 255.255.255.0
+    next
+end
+\`\`\`
+A tunnel carries traffic only when you've also added a **route** through the tunnel interface and a **firewall policy in each direction you need**. Remember that the tunnel's up status doesn't prove traffic will flow.
+
+### Redundancy
+Common designs use a primary and a backup tunnel with route distance or priority, and dead peer detection (DPD) to detect failure.
+
+### Troubleshooting
+\`\`\`
+get vpn ipsec tunnel summary
+diagnose vpn tunnel list
+diagnose debug application ike -1
+diagnose debug enable
+\`\`\`
+| Symptom | Likely cause |
+| --- | --- |
+| No reply at all | Connectivity, wrong remote gateway, UDP 500 blocked |
+| Fails at authentication | PSK or certificate mismatch |
+| "no proposal chosen" in phase 1 or 2 | Mismatched encryption or DH settings |
+| Phase 2 rejected: selectors don't match | Subnets don't mirror each other |
+| Tunnel up, no traffic | Missing route or policy, or NAT |
+
+### SSL VPN changes
+From **FortiOS 7.6.3**, SSL VPN tunnel mode is no longer supported and its configuration is removed on upgrade, so you must migrate to IPsec first, with FortiConverter or manually. IPsec can use TCP 443 where UDP is blocked. Web mode continues as **Agentless VPN** but is disabled by default. Models with 2 GB of RAM or less don't support SSL VPN web or tunnel mode. Check the documentation for your exact release.`,
+      concepts: ["IKE phases", "NAT-T on UDP 4500", "Route plus policy", "Selectors", "DPD", "SSL VPN tunnel mode removal in 7.6.3"],
+      exercise: "Do the IPsec VPN lab, including the broken-tunnel task.",
+      sources: [DOCS.fortigate, "https://docs.fortinet.com/document/fortigate/7.6.0/new-features/155142/migration-from-ssl-vpn-tunnel-mode-to-ipsec-vpn-7-6-3"],
+      questions: [
+        { d: "ADVANCED", topic: "VPN troubleshooting", tech: "IPsec", p: "A route-based tunnel shows up in the IPsec monitor, and the phase 2 selectors match, but pings across it fail. Debug flow on the local FortiGate shows \"Denied by forward policy check\". What should be added?", a: [["A firewall policy between the LAN interface and the tunnel interface", "The packet has reached policy lookup and no policy matched."], ["A new pre-shared key", "The tunnel is already up, so authentication is fine."], ["A second phase 1", "Phase 1 is already working."], ["A higher DH group", "Crypto settings have already been agreed."]], c: [0], e: "A tunnel that's up only proves negotiation succeeded. Traffic still needs a route and policies." },
+        { d: "ADVANCED", topic: "IKE debug", tech: "IPsec", p: "What is the most likely problem from this IKE debug excerpt?", x: "ike 0:to-branch:3: responder received SA_INIT\nike 0:to-branch:3: no proposal chosen\nike 0:to-branch:3: negotiation failure", a: [["The peers have no matching encryption, integrity or DH proposal", "\"no proposal chosen\" points to mismatched crypto settings."], ["The tunnel route is missing", "Routes don't affect IKE proposal matching."], ["The pre-shared key is wrong", "Authentication hasn't been reached in this exchange."], ["The firewall policy is missing", "Policies for tunnel traffic don't affect IKE negotiation."]], c: [0], e: "Compare both peers' proposals and DH groups. A PSK mismatch would typically appear at the authentication stage." },
+        { d: "INTERMEDIATE", topic: "NAT traversal", tech: "IPsec", p: "A FortiGate is behind a NAT device and has an IPsec tunnel to a peer. Which ports would you expect IKE and encapsulated ESP to use after NAT is detected?", a: [["UDP 4500", "NAT-T moves IKE and ESP encapsulation to UDP 4500."], ["TCP 541", "This is used by FortiManager (FGFM)."], ["TCP 514", "This is the default for FortiAnalyzer logging."], ["UDP 53", "This is DNS."]], c: [0], e: "IKE starts on UDP 500 and moves to 4500 when NAT is detected, encapsulating ESP so it survives NAT." },
+        { d: "ADVANCED", topic: "SSL VPN migration", tech: "FortiOS release changes", p: "An organisation running FortiOS 7.6.2 with SSL VPN tunnel mode plans to upgrade to 7.6.3. What should it do?", a: [["Migrate remote users to IPsec VPN before upgrading", "Tunnel mode configuration is removed after the upgrade, so migrate first."], ["Upgrade and expect tunnel mode to continue", "Tunnel mode is no longer supported on 7.6.3."], ["Upgrade, then restore the SSL VPN settings from backup", "The feature isn't available to restore."], ["Move all users to Agentless VPN without changes to their clients", "Web mode isn't an equivalent replacement for full tunnel access."]], c: [0], e: "This is a version-specific change, and Fortinet publishes specific migration guidance. Check current documentation before any upgrade." },
+        { type: "ORDERING", d: "INTERMEDIATE", topic: "IPsec build", tech: "IPsec", p: "Put these steps in a logical order to bring up a working route-based VPN.", a: [["Configure phase 1 with the remote gateway and authentication", "This defines the peer."], ["Configure phase 2 with proposals and selectors", "It defines the traffic SAs."], ["Add a route to the remote subnet via the tunnel interface", "Without it, traffic won't be sent into the tunnel."], ["Create firewall policies between LAN and tunnel", "This allows the traffic."], ["Test with traffic and check tunnel status", "Validation comes last."]], e: "All four configuration pieces are needed, even though only the first two affect tunnel negotiation." },
+        { type: "MULTIPLE", d: "ADVANCED", topic: "Tunnel status", tech: "IPsec", p: "A dial-on-demand tunnel shows no traffic and the phase 2 selector is down. Which two commands help you investigate? (Choose two.)", a: [["diagnose vpn tunnel list", "It shows SAs and counters."], ["diagnose debug application ike -1", "It shows negotiation messages after enabling debug."], ["get system ha status", "This shows HA information, not tunnel state."], ["diagnose sys top", "This shows processes, not tunnel negotiation."]], c: [0, 1], e: "Remember diagnose debug enable to see output, and turn it off afterwards." },
+      ],
+    },
+  ],
+};
