@@ -1,4 +1,6 @@
+import type { NseProgramme } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { programmeOf } from "./programmes";
 import { calculateReadiness, moduleScores } from "./readiness";
 
 export const LEVELS = [
@@ -19,12 +21,12 @@ export const TRACK_LABELS: Record<string, string> = {
   CLOUD_SECURITY: "Cloud Security",
 };
 
-export function listPublishedPathways() {
+export function listPublishedPathways(programme: NseProgramme = "FORTINET") {
   return prisma.nsePathway.findMany({
-    where: { status: "PUBLISHED" },
+    where: { status: "PUBLISHED", programme },
     orderBy: { sortOrder: "asc" },
     select: {
-      id: true, slug: true, level: true, track: true, title: true, summary: true, questionTarget: true, mockQuestions: true, mockMinutes: true,
+      id: true, slug: true, programme: true, level: true, track: true, title: true, summary: true, questionTarget: true, mockQuestions: true, mockMinutes: true,
       modules: { where: { status: "PUBLISHED" }, orderBy: { sortOrder: "asc" }, select: { id: true, slug: true, title: true, _count: { select: { questions: { where: { status: "PUBLISHED" } } } } } },
       labs: { where: { status: "PUBLISHED" }, select: { slug: true } },
     },
@@ -85,10 +87,11 @@ export async function getStudentProgress(userId: string, pathways: PublishedPath
 }
 
 export function nextActivity(row: Awaited<ReturnType<typeof getStudentProgress>>["byPathway"][number]) {
+  const base = programmeOf(row.pathway.programme).base;
   const weak = row.topics.filter((topic) => topic.percent !== null && topic.total >= 3).sort((a, b) => a.percent! - b.percent!)[0];
-  if (weak && weak.percent! < 70) return { label: `Practise ${weak.title}: you're on ${weak.percent}%`, href: `/fortinet/${row.pathway.slug}/${weak.slug}` };
+  if (weak && weak.percent! < 70) return { label: `Practise ${weak.title}: you're on ${weak.percent}%`, href: `${base}/${row.pathway.slug}/${weak.slug}` };
   const untried = row.topics.find((topic) => !topic.completed);
-  if (untried) return { label: `Practise ${untried.title}`, href: `/fortinet/${row.pathway.slug}/${untried.slug}` };
-  if (row.labsCompleted < row.pathway.labs.length) return { label: "Finish the practical labs", href: "/fortinet/labs" };
-  return { label: "Take a timed mock exam", href: `/fortinet/${row.pathway.slug}#exams` };
+  if (untried) return { label: `Practise ${untried.title}`, href: `${base}/${row.pathway.slug}/${untried.slug}` };
+  if (row.labsCompleted < row.pathway.labs.length) return { label: "Finish the practical labs", href: `${base}/labs` };
+  return { label: "Take a timed mock exam", href: `${base}/${row.pathway.slug}#exams` };
 }

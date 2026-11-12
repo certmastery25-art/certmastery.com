@@ -111,7 +111,7 @@ test("public pages: landing, every pathway and module load, and CompTIA and Cisc
   const landing = await (await client.fetch("/fortinet")).text();
   assert.match(landing, /Fortinet NSE Certification Academy/);
   assert.match(landing, /Master Fortinet/);
-  const pathways = await prisma.nsePathway.findMany({ include: { modules: true } });
+  const pathways = await prisma.nsePathway.findMany({ where: { programme: "FORTINET" }, include: { modules: true } });
   assert.equal(pathways.length, 17);
   for (const track of ["SECURE_NETWORKING", "SECURITY_OPERATIONS", "SASE", "CLOUD_SECURITY"] as const) {
     for (const level of [5, 6, 7]) assert.ok(pathways.some((pathway) => pathway.level === level && pathway.track === track), `NSE ${level} ${track}`);
@@ -140,6 +140,46 @@ test("existing quiz engine still works alongside NSE", async () => {
   const { quiz, questions } = await created.json();
   assert.equal((await client.post("/api/attempts", { questionId: questions[0].id, selectedLabel: "A", quizSessionId: quiz.id })).status, 200);
   assert.equal((await client.post(`/api/quizzes/${quiz.id}/complete`, {})).status, 200);
+});
+
+test("Azure: AZ-104 is published and the other exams stay hidden drafts", async () => {
+  const azure = await prisma.nsePathway.findMany({
+    where: { programme: "AZURE" },
+    orderBy: { level: "asc" },
+    include: { modules: { include: { examObjectives: true } }, requires: { include: { requiredPathway: true } } },
+  });
+  assert.deepEqual(azure.map((pathway) => pathway.slug), ["az-900", "az-104", "az-700", "az-305"]);
+  assert.ok(azure.every((pathway) => (pathway.slug === "az-104") === (pathway.status === "PUBLISHED") && pathway.modules.every((module) => module.status === pathway.status)));
+  assert.ok(azure.every((pathway) => pathway.modules.every((module) => module.examObjectives.length >= 2 && module.weightMin && module.weightMax)));
+  const az305 = azure.find((pathway) => pathway.slug === "az-305")!;
+  assert.deepEqual(az305.requires.map((item) => [item.requiredPathway.slug, item.kind]), [["az-104", "REQUIRED"]]);
+
+  const { client } = await user("azure");
+  for (const path of ["/fortinet/az-104", "/fortinet/az-900", "/azure/az-900", "/azure/az-305/infrastructure"]) assert.equal((await client.fetch(path)).status, 404, path);
+  for (const path of ["/fortinet", "/fortinet/dashboard"]) assert.doesNotMatch(await (await client.fetch(path)).text(), /AZ-104|Microsoft Azure Administrator/, path);
+  assert.equal((await client.post("/api/nse/exams", { pathway: "az-900", mode: "PRACTICE", count: 5 })).status, 404, "a draft pathway can't be examined");
+
+  const landing = await (await client.fetch("/azure")).text();
+  assert.match(landing, /Microsoft Azure certification practice/);
+  assert.match(landing, /In preparation/);
+  for (const path of ["/certifications", "/practice", "/"]) assert.match(await (await client.fetch(path)).text(), /AZ-104/, path);
+  const az104 = azure.find((pathway) => pathway.slug === "az-104")!;
+  assert.match(await (await client.fetch("/azure/az-104")).text(), /Practise by exam domain/);
+  for (const module of az104.modules) {
+    const page = await client.fetch(`/azure/az-104/${module.slug}`);
+    assert.equal(page.status, 200, module.slug);
+    assert.match(await page.text(), /objectives for this domain/);
+  }
+  assert.equal(await prisma.nseQuestion.count({ where: { module: { pathwayId: az104.id }, objectiveId: null } }), 0, "every AZ-104 question is linked to an objective");
+
+  // A practice question on AZ-104 runs through the shared engine and links back to /azure.
+  const attemptId = await startExam(client, { pathway: "az-104", mode: "PRACTICE", count: 3 });
+  const exam = await (await client.fetch(`/api/nse/exams/${attemptId}?index=0`)).json();
+  assert.equal(exam.attempt.pathway.programme, "AZURE");
+  const answered = await (await client.post(`/api/nse/exams/${attemptId}/answer`, { index: 0, response: await correctAnswer(attemptId, 0) })).json();
+  assert.equal(answered.isCorrect, true);
+  assert.equal((await client.fetch(`/azure/exam/${attemptId}`)).status, 200);
+  assert.match(await (await client.fetch("/azure/dashboard")).text(), /Your Azure progress/);
 });
 
 test("signed-out visitors can't use protected NSE features", async () => {

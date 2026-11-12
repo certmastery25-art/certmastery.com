@@ -33,16 +33,16 @@ enum QuizMode {
 }
 
 model User {
-  id                   String          @id @default(cuid())
+  id                   String              @id @default(cuid())
   name                 String?
-  email                String?         @unique
+  email                String?             @unique
   emailVerified        DateTime?
   image                String?
   passwordHash         String?
-  role                 UserRole        @default(STUDENT)
-  accessTier           AccessTier      @default(FREE)
-  stripeCustomerId     String?         @unique
-  stripeSubscriptionId String?         @unique
+  role                 UserRole            @default(STUDENT)
+  accessTier           AccessTier          @default(FREE)
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
   accounts             Account[]
   sessions             Session[]
   quizSessions         QuizSession[]
@@ -50,8 +50,8 @@ model User {
   labCompletions       LabCompletion[]
   nseAttempts          NseExamAttempt[]
   nseModuleProgress    NseModuleProgress[]
-  createdAt            DateTime        @default(now())
-  updatedAt            DateTime        @updatedAt
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 }
 
 model Account {
@@ -251,6 +251,25 @@ enum NseContentStatus {
   PUBLISHED
 }
 
+// Each vendor programme runs on the same pathway, exam, lab and readiness engine.
+enum NseProgramme {
+  FORTINET
+  AZURE
+}
+
+// Where a question came from. Content written with AI help stays AI_DRAFT until a qualified person verifies it.
+enum NseProvenance {
+  VERIFIED
+  ORIGINAL
+  AI_DRAFT
+}
+
+// REQUIRED is a vendor requirement; RECOMMENDED is CertMastery's suggested order.
+enum NsePrerequisiteKind {
+  REQUIRED
+  RECOMMENDED
+}
+
 enum NseTrack {
   SECURE_NETWORKING
   SECURITY_OPERATIONS
@@ -279,8 +298,9 @@ enum NseExamMode {
 }
 
 model NsePathway {
-  id               String           @id @default(cuid())
-  slug             String           @unique
+  id               String                   @id @default(cuid())
+  slug             String                   @unique
+  programme        NseProgramme             @default(FORTINET)
   level            Int
   track            NseTrack?
   title            String
@@ -295,20 +315,35 @@ model NsePathway {
   officialSpec     String?
   productVersion   String?
   // CertMastery's own mock settings, always labelled as ours.
-  mockQuestions    Int              @default(40)
-  mockMinutes      Int              @default(60)
-  questionTarget   Int              @default(0)
+  mockQuestions    Int                      @default(40)
+  mockMinutes      Int                      @default(60)
+  questionTarget   Int                      @default(0)
   sortOrder        Int
-  status           NseContentStatus @default(DRAFT)
+  status           NseContentStatus         @default(DRAFT)
   sourcesCheckedAt DateTime?
+  // The vendor's "skills measured as of" date for the outline the modules follow.
+  skillsAsOf       DateTime?
   modules          NseModule[]
+  requires         NsePathwayPrerequisite[] @relation("requires")
+  requiredBy       NsePathwayPrerequisite[] @relation("requiredBy")
   labs             NseLab[]
   attempts         NseExamAttempt[]
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
 
-  @@unique([level, track])
-  @@index([status, sortOrder])
+  @@unique([programme, level, track])
+  @@index([programme, status, sortOrder])
+}
+
+model NsePathwayPrerequisite {
+  pathwayId         String
+  requiredPathwayId String
+  kind              NsePrerequisiteKind
+  note              String?
+  pathway           NsePathway          @relation("requires", fields: [pathwayId], references: [id], onDelete: Cascade)
+  requiredPathway   NsePathway          @relation("requiredBy", fields: [requiredPathwayId], references: [id], onDelete: Cascade)
+
+  @@id([pathwayId, requiredPathwayId])
 }
 
 model NseModule {
@@ -325,12 +360,16 @@ model NseModule {
   productVersion String?
   // Share of mock exam questions drawn from this module.
   weight         Int                 @default(10)
+  // The vendor's published share of the exam for this domain, in percent.
+  weightMin      Int?
+  weightMax      Int?
   sortOrder      Int
   status         NseContentStatus    @default(DRAFT)
   // Null until a qualified person has reviewed it; never set by the seed.
   lastReviewedAt DateTime?
   pathway        NsePathway          @relation(fields: [pathwayId], references: [id], onDelete: Cascade)
   questions      NseQuestion[]
+  examObjectives NseObjective[]
   progress       NseModuleProgress[]
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
@@ -339,11 +378,26 @@ model NseModule {
   @@index([pathwayId, status, sortOrder])
 }
 
+// A vendor objective inside a module (exam domain), with the skills it lists. Performance is tracked per objective.
+model NseObjective {
+  id        String        @id @default(cuid())
+  moduleId  String
+  slug      String
+  title     String
+  skills    String[]
+  sortOrder Int
+  module    NseModule     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions NseQuestion[]
+
+  @@unique([moduleId, slug])
+}
+
 model NseQuestion {
   id          String           @id @default(cuid())
   // Stable key for seeded and imported content, so re-running a seed never overwrites an editor's changes.
   sourceKey   String?          @unique
   moduleId    String
+  objectiveId String?
   type        NseQuestionType  @default(SINGLE)
   difficulty  NseDifficulty    @default(INTERMEDIATE)
   prompt      String
@@ -355,13 +409,16 @@ model NseQuestion {
   reference   String?
   status      NseContentStatus @default(DRAFT)
   reviewNotes String?
+  provenance  NseProvenance    @default(AI_DRAFT)
   module      NseModule        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  objective   NseObjective?    @relation(fields: [objectiveId], references: [id], onDelete: SetNull)
   options     NseOption[]
   examItems   NseExamItem[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   @@index([moduleId, status, difficulty])
+  @@index([objectiveId])
 }
 
 model NseOption {

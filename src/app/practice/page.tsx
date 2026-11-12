@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, Clock3, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Clock3, Cloud, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { programmeOf } from "@/lib/nse/programmes";
 import { certificationIcon } from "@/lib/cert-icons";
 import { listPublishedPathways, pathwayQuestionCount } from "@/lib/nse/progress";
 import { prisma } from "@/lib/prisma";
@@ -12,12 +13,13 @@ export const metadata: Metadata = { title: "Practice tests" };
 const SECONDS_PER_QUESTION = 90;
 
 export default async function PracticeTestsPage() {
-  const [certifications, pathways] = await Promise.all([
+  const [certifications, fortinet, azure] = await Promise.all([
     prisma.certification.findMany({
       orderBy: { name: "asc" },
       select: { id: true, slug: true, acronym: true, name: true, examCode: true, timedExamQuestions: true, timedExamMinutes: true, domains: { select: { _count: { select: { questions: true } } } } },
     }),
     listPublishedPathways(),
+    listPublishedPathways("AZURE"),
   ]);
 
   return (
@@ -53,15 +55,15 @@ export default async function PracticeTestsPage() {
                 </tr>
               );
             })}
-            {pathways.map((pathway) => {
+            {[...fortinet, ...azure].map((pathway) => {
               const total = pathwayQuestionCount(pathway);
               const questions = Math.min(pathway.mockQuestions, total);
               return (
                 <tr key={pathway.id}>
-                  <th scope="row"><span className="practice-cert"><span className="cert-symbol"><ShieldCheck size={17} /></span><span><strong>Fortinet {pathway.title.split(":")[0]}</strong><small>{pathway.title.split(": ")[1]}</small></span></span></th>
-                  <td data-label="Question bank">{total} questions · {pathway.modules.length} modules</td>
+                  <th scope="row"><span className="practice-cert"><span className="cert-symbol">{pathway.programme === "AZURE" ? <Cloud size={17} /> : <ShieldCheck size={17} />}</span><span><strong>{pathway.programme === "AZURE" ? "Microsoft" : "Fortinet"} {pathway.title.split(":")[0]}</strong><small>{pathway.title.split(": ")[1]}</small></span></span></th>
+                  <td data-label="Question bank">{total} questions · {pathway.modules.length} {pathway.programme === "AZURE" ? "domains" : "modules"}</td>
                   <td data-label="Timed exam">{questions} questions · {Math.max(5, Math.round((pathway.mockMinutes * questions) / pathway.mockQuestions))} min</td>
-                  <td><Link className="button button-primary button-small" href={`/fortinet/${pathway.slug}#exams`}>Set up <ArrowRight size={15} /><span className="sr-only"> {pathway.title} practice</span></Link></td>
+                  <td><Link className="button button-primary button-small" href={`${programmeOf(pathway.programme).base}/${pathway.slug}#exams`}>Set up <ArrowRight size={15} /><span className="sr-only"> {pathway.title} practice</span></Link></td>
                 </tr>
               );
             })}

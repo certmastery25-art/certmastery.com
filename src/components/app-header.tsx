@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const links = [
   { href: "/certifications", label: "Certifications" },
   { href: "/fortinet", label: "Fortinet NSE" },
+  { href: "/azure", label: "Microsoft Azure" },
   { href: "/practice", label: "Practice tests" },
   { href: "/labs", label: "Hands-on labs" },
   { href: "/history", label: "My progress" },

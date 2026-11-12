@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, FlaskConical, Network, ShieldCheck } from "lucide-react";
+import { ArrowRight, Cloud, FlaskConical, Network, ShieldCheck } from "lucide-react";
 import { certificationIcon } from "@/lib/cert-icons";
 import { listPublishedPathways, pathwayQuestionCount } from "@/lib/nse/progress";
 import { prisma } from "@/lib/prisma";
@@ -9,13 +9,15 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Certifications" };
 
 export default async function CertificationsPage() {
-  const [certifications, pathways] = await Promise.all([
+  const [certifications, pathways, azure] = await Promise.all([
     prisma.certification.findMany({ orderBy: { name: "asc" }, include: { domains: { orderBy: { sortOrder: "asc" }, include: { _count: { select: { questions: true } } } } } }),
     listPublishedPathways(),
+    listPublishedPathways("AZURE"),
   ]);
-  // Fortinet takes its alphabetical place among the other vendors.
+  // Fortinet and Microsoft take their alphabetical places among the other vendors.
   const beforeFortinet = certifications.filter((certification) => certification.name < "Fortinet");
-  const afterFortinet = certifications.filter((certification) => certification.name >= "Fortinet");
+  const beforeMicrosoft = certifications.filter((certification) => certification.name >= "Fortinet" && certification.name < "Microsoft");
+  const afterMicrosoft = certifications.filter((certification) => certification.name >= "Microsoft");
   const renderCertification = (certification: (typeof certifications)[number]) => {
       const Icon = certificationIcon(certification.slug);
       const total = certification.domains.reduce((sum, domain) => sum + domain._count.questions, 0);
@@ -35,7 +37,15 @@ export default async function CertificationsPage() {
           <div className="program-action"><span>{pathwayQuestionCount(pathway)} questions</span><Link className="button button-primary" href={`/fortinet/${pathway.slug}`}>Start studying <ArrowRight size={16} /></Link>{pathway.labs.length > 0 && <Link className="program-labs-link" href="/fortinet/labs"><FlaskConical size={14} /> Simulated labs</Link>}</div>
         </article>
       ))}
-      {afterFortinet.map(renderCertification)}
+      {beforeMicrosoft.map(renderCertification)}
+      {azure.map((pathway) => (
+        <article className="program-row" key={pathway.id}>
+          <div className="program-mark"><Cloud size={24} /></div>
+          <div className="program-main"><div className="program-kicker">{pathway.slug.toUpperCase()} <span>·</span> {pathway.modules.length} exam domains</div><h2>Microsoft {pathway.title.split(": ")[1]}</h2><p>{pathway.summary}</p><div className="program-domains">{pathway.modules.map((module) => <span key={module.id}>{module.title}</span>)}</div></div>
+          <div className="program-action"><span>{pathwayQuestionCount(pathway)} questions</span><Link className="button button-primary" href={`/azure/${pathway.slug}`}>Start practice <ArrowRight size={16} /></Link></div>
+        </article>
+      ))}
+      {afterMicrosoft.map(renderCertification)}
     </div>
   </main>;
 }

@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 
-type Props = { pathway: string; mode: "PRACTICE" | "MOCK" | "READINESS"; module?: string; count?: number; label: string; secondary?: boolean; signedIn: boolean };
+type Props = { base: string; pathway: string; mode: "PRACTICE" | "MOCK" | "READINESS"; module?: string; count?: number; label: string; secondary?: boolean; signedIn: boolean };
 
-export function StartExam({ pathway, mode, module, count, label, secondary, signedIn }: Props) {
+export function StartExam({ base, pathway, mode, module, count, label, secondary, signedIn }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -22,7 +22,7 @@ export function StartExam({ pathway, mode, module, count, label, secondary, sign
       const response = await fetch("/api/nse/exams", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pathway, mode, module, count }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "We couldn't start this exam.");
-      router.push(`/fortinet/exam/${data.id}`);
+      router.push(`${base}/exam/${data.id}`);
     } catch (startError) {
       setError(startError instanceof Error ? startError.message : "We couldn't start this exam.");
       setPending(false);

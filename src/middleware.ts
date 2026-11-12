@@ -10,6 +10,8 @@ function isAccountOnlyPath(pathname: string) {
     || pathname.startsWith("/fortinet/exam/")
     || pathname.startsWith("/fortinet/labs/")
     || pathname === "/fortinet/dashboard"
+    || pathname.startsWith("/azure/exam/")
+    || pathname === "/azure/dashboard"
     || pathname.startsWith("/api/nse/")
     || pathname === "/api/questions"
     || pathname.startsWith("/api/quizzes")

@@ -3,7 +3,7 @@
 import type { SeedDifficulty, SeedQuestion } from "../types";
 import { q, withExhibit } from "./helpers";
 
-function generator(seed: number) {
+export function generator(seed: number) {
   let state = seed;
   const next = () => {
     state = (state + 0x6d2b79f5) | 0;
@@ -14,7 +14,7 @@ function generator(seed: number) {
   return { int: (min: number, max: number) => min + Math.floor(next() * (max - min + 1)), pick: <T,>(items: readonly T[]) => items[Math.floor(next() * items.length)] };
 }
 
-const toIp = (value: number) => [24, 16, 8, 0].map((shift) => (value >>> shift) & 255).join(".");
+export const toIp = (value: number) => [24, 16, 8, 0].map((shift) => (value >>> shift) & 255).join(".");
 const maskOf = (prefix: number) => (prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0);
 
 export function subnetDrills(count: number, seed: number): SeedQuestion[] {

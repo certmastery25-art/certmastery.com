@@ -39,7 +39,7 @@ export default async function FortinetPage() {
   const [session, pathways, labCount] = await Promise.all([
     getServerSession(authOptions),
     listPublishedPathways(),
-    prisma.nseLab.count({ where: { status: "PUBLISHED" } }),
+    prisma.nseLab.count({ where: { status: "PUBLISHED", pathway: { programme: "FORTINET" } } }),
   ]);
   const questionCount = pathways.reduce((sum, pathway) => sum + pathway.modules.reduce((moduleSum, module) => moduleSum + module._count.questions, 0), 0);
   const moduleCount = pathways.reduce((sum, pathway) => sum + pathway.modules.length, 0);

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { programmeOf } from "@/lib/nse/programmes";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, Clock3, Flag, GripVertical, LoaderCircle, X } from "lucide-react";
 
 type Mode = "PRACTICE" | "MOCK" | "READINESS";
@@ -9,7 +10,7 @@ type Answer = string[] | Record<string, string>;
 type RevealOption = { label: string; text: string; rationale: string; isCorrect: boolean; position: number | null; matchTo: string | null };
 type Reveal = { explanation: string; technology: string; topic: string; reference: string | null; options: RevealOption[] };
 type Question = { type: "SINGLE" | "MULTIPLE" | "MATCHING" | "ORDERING"; prompt: string; exhibit: string | null; difficulty: string; options: { label: string; text: string }[]; selectCount: number | null; targets: string[] | null };
-type Attempt = { id: string; mode: Mode; totalQuestions: number; correctAnswers: number; deadlineAt: string | null; submittedAt: string | null; serverNow: string; pathway: { slug: string; title: string } };
+type Attempt = { id: string; mode: Mode; totalQuestions: number; correctAnswers: number; deadlineAt: string | null; submittedAt: string | null; serverNow: string; pathway: { slug: string; title: string; programme: "FORTINET" | "AZURE" } };
 type Result = Reveal & { response: Answer | null; isCorrect: boolean | null; flagged: boolean; type: Question["type"]; prompt: string; exhibit: string | null; difficulty: string; module: { title: string; slug: string } };
 type Loaded = { attempt: Attempt; results?: Result[]; statuses?: { answered: boolean; flagged: boolean }[]; index?: number; question?: Question; response?: Answer | null; flagged?: boolean; isCorrect?: boolean | null; reveal?: Reveal };
 
@@ -153,10 +154,10 @@ function Results({ attempt, results }: { attempt: Attempt; results: Result[] }) 
       <div className="nse-topic-scores">
         {rows.map((row) => {
           const value = Math.round((row.correct / row.total) * 100);
-          return <div key={row.slug}><Link className="text-link" href={`/fortinet/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link><span>{row.correct}/{row.total} ({value}%)</span><div className="accuracy-track"><span style={{ width: `${value}%` }} /></div></div>;
+          return <div key={row.slug}><Link className="text-link" href={`${programmeOf(attempt.pathway.programme).base}/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link><span>{row.correct}/{row.total} ({value}%)</span><div className="accuracy-track"><span style={{ width: `${value}%` }} /></div></div>;
         })}
       </div>
-      {weak.length > 0 && <div className="nse-recommend"><h2>Practise these next</h2><ul>{weak.map((row) => <li key={row.slug}><Link className="text-link" href={`/fortinet/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link></li>)}</ul></div>}
+      {weak.length > 0 && <div className="nse-recommend"><h2>Practise these next</h2><ul>{weak.map((row) => <li key={row.slug}><Link className="text-link" href={`${programmeOf(attempt.pathway.programme).base}/${attempt.pathway.slug}/${row.slug}`}>{row.title}</Link></li>)}</ul></div>}
 
       <h2>Review your answers</h2>
       <div className="nse-review-list">
@@ -169,7 +170,7 @@ function Results({ attempt, results }: { attempt: Attempt; results: Result[] }) 
           </details>
         ))}
       </div>
-      <div className="result-actions"><Link className="button button-primary" href={`/fortinet/${attempt.pathway.slug}`}>Back to pathway <ArrowRight size={16} /></Link><Link className="button button-secondary" href="/fortinet/dashboard">View dashboard</Link></div>
+      <div className="result-actions"><Link className="button button-primary" href={`${programmeOf(attempt.pathway.programme).base}/${attempt.pathway.slug}`}>Back to pathway <ArrowRight size={16} /></Link><Link className="button button-secondary" href={`${programmeOf(attempt.pathway.programme).base}/dashboard`}>View dashboard</Link></div>
     </section>
   );
 }
@@ -226,7 +227,7 @@ export function NseExamRunner({ attemptId }: { attemptId: string }) {
     return () => window.clearInterval(timer);
   }, [deadline, submit]);
 
-  if (error && !data) return <div className="empty-state"><p>{error}</p><Link className="button button-secondary" href="/fortinet">Back to the academy</Link></div>;
+  if (error && !data) return <div className="empty-state"><p>{error}</p><Link className="button button-secondary" href="/certifications">Back to certifications</Link></div>;
   if (!data) return <div className="quiz-loading" role="status"><LoaderCircle className="spin" size={22} /> Loading your exam</div>;
   if (data.results) return <Results attempt={data.attempt} results={data.results} />;
 
@@ -266,7 +267,7 @@ export function NseExamRunner({ attemptId }: { attemptId: string }) {
   return (
     <section className="nse-exam" aria-labelledby="question-heading">
       <div className="quiz-topline">
-        <Link href={`/fortinet/${attempt.pathway.slug}`} className="quiz-back"><ArrowLeft size={16} /> {attempt.pathway.title}</Link>
+        <Link href={`${programmeOf(attempt.pathway.programme).base}/${attempt.pathway.slug}`} className="quiz-back"><ArrowLeft size={16} /> {attempt.pathway.title}</Link>
         <div className="quiz-mode-label">{MODE_LABEL[attempt.mode]}</div>
         {remaining !== null ? <div className={`quiz-timer ${remaining < 60 ? "timer-urgent" : ""}`} role="timer" aria-label={`Time remaining ${formatTime(remaining)}`}><Clock3 size={16} />{formatTime(remaining)}</div> : <span className="quiz-timer-space" />}
       </div>

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Fortinet NSE labs", description: "Pr
 export default async function NseLabsPage() {
   const [session, labs] = await Promise.all([
     getServerSession(authOptions),
-    prisma.nseLab.findMany({ where: { status: "PUBLISHED" }, orderBy: [{ pathway: { sortOrder: "asc" } }, { sortOrder: "asc" }], select: { slug: true, title: true, summary: true, difficulty: true, durationMinutes: true, pathway: { select: { title: true, level: true } } } }),
+    prisma.nseLab.findMany({ where: { status: "PUBLISHED", pathway: { programme: "FORTINET" } }, orderBy: [{ pathway: { sortOrder: "asc" } }, { sortOrder: "asc" }], select: { slug: true, title: true, summary: true, difficulty: true, durationMinutes: true, pathway: { select: { title: true, level: true } } } }),
   ]);
   const completions = session?.user.id ? await prisma.labCompletion.findMany({ where: { userId: session.user.id, labSlug: { startsWith: "nse:" } }, select: { labSlug: true } }) : [];
   const completed = new Set(completions.map((row) => row.labSlug.slice(4)));

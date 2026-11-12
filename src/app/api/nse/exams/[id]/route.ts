@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     await finalizeAttempt(id);
     attempt = (await findOwnAttempt(id, session.user.id))!;
   }
-  const pathway = await prisma.nsePathway.findUnique({ where: { id: attempt.pathwayId }, select: { slug: true, title: true } });
+  const pathway = await prisma.nsePathway.findUnique({ where: { id: attempt.pathwayId }, select: { slug: true, title: true, programme: true } });
   const summary = { id: attempt.id, mode: attempt.mode, totalQuestions: attempt.totalQuestions, correctAnswers: attempt.correctAnswers, startedAt: attempt.startedAt, deadlineAt: attempt.deadlineAt, submittedAt: attempt.submittedAt, serverNow: new Date(), pathway };
 
   if (attempt.submittedAt) {

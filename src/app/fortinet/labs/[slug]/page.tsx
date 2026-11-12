@@ -15,7 +15,7 @@ export default async function NseLabPage({ params }: { params: Promise<{ slug: s
   const { slug } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user.id) redirect(`/login?reason=account-required&callbackUrl=${encodeURIComponent(`/fortinet/labs/${slug}`)}`);
-  const lab = await prisma.nseLab.findFirst({ where: { slug, status: "PUBLISHED" }, include: { pathway: { select: { title: true, slug: true } } } });
+  const lab = await prisma.nseLab.findFirst({ where: { slug, status: "PUBLISHED", pathway: { programme: "FORTINET" } }, include: { pathway: { select: { title: true, slug: true } } } });
   if (!lab) notFound();
   const completion = await prisma.labCompletion.findUnique({ where: { userId_labSlug: { userId: session.user.id, labSlug: `nse:${lab.slug}` } } });
   const definition = labDefinitionSchema.parse(lab.definition);
