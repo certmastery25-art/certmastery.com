@@ -5,17 +5,16 @@ import { nsePathways, toOptions } from "../../prisma/nse/content";
 
 const bySlug = new Map(azurePathways.map((pathway) => [pathway.slug, pathway]));
 
-test("the four Azure pathways are separate and sourced from Microsoft; only AZ-104 is published", () => {
+test("the four Azure pathways are separate, published and sourced from Microsoft", () => {
   assert.deepEqual(azurePathways.map((pathway) => pathway.slug), ["az-900", "az-104", "az-700", "az-305"]);
   const fortinet = new Set(nsePathways.map((pathway) => pathway.slug));
   for (const pathway of azurePathways) {
     assert.equal(pathway.programme, "AZURE");
-    assert.equal(pathway.status, pathway.slug === "az-104" ? "PUBLISHED" : "DRAFT", `${pathway.slug} stays hidden until it has content`);
+    assert.equal(pathway.status, "PUBLISHED", pathway.slug);
     assert.equal(fortinet.has(pathway.slug), false);
     assert.match(pathway.officialUrl ?? "", /^https:\/\/learn\.microsoft\.com\//);
     assert.ok(pathway.skillsAsOf && !Number.isNaN(Date.parse(pathway.skillsAsOf)), pathway.slug);
     assert.match(pathway.officialSpec ?? "", /700 or greater/);
-    if (pathway.slug !== "az-104") for (const module of pathway.modules) assert.equal(module.questions.length, 0, `${pathway.slug} has no questions yet`);
   }
 });
 
@@ -57,13 +56,18 @@ test("AZ-305 requires AZ-104, and AZ-700 stays optional", () => {
   assert.ok(azurePathways.every((pathway) => !(pathway.requires ?? []).some((item) => item.slug === "az-700")), "nothing requires AZ-700");
 });
 
-test("AZ-104 questions cover every domain, are tagged to real objectives and don't give the answer away", () => {
-  const az104 = bySlug.get("az-104")!;
-  assert.deepEqual(az104.mock, [50, 100], "100 minutes is Microsoft's published exam time");
+test("mock times follow Microsoft's published exam durations where they exist", () => {
+  assert.deepEqual(bySlug.get("az-900")!.mock, [40, 45], "45 minutes");
+  assert.deepEqual(bySlug.get("az-104")!.mock, [50, 100], "100 minutes");
+  assert.deepEqual(bySlug.get("az-700")!.mock, [50, 100], "100 minutes");
+});
+
+for (const pathway of azurePathways) test(`${pathway.slug} questions cover every objective, are tagged correctly and don't give the answer away`, () => {
   const handWritten: { correct: string; options: string[] }[] = [];
-  for (const module of az104.modules) {
-    assert.ok(module.questions.length >= 15, `${module.slug} needs questions`);
+  for (const module of pathway.modules) {
     const objectives = new Set((module.examObjectives ?? []).map((item) => item.slug));
+    const used = new Set(module.questions.map((question) => question.obj));
+    for (const objective of objectives) assert.ok(used.has(objective), `${pathway.slug}/${module.slug}/${objective} has no questions`);
     for (const question of module.questions) {
       assert.ok(question.obj && objectives.has(question.obj), `${question.p} is tagged ${question.obj}`);
       assert.ok(question.e && toOptions(question).every((item) => item.text && item.rationale), question.p);
@@ -74,4 +78,9 @@ test("AZ-104 questions cover every domain, are tagged to real objectives and don
   }
   const longest = handWritten.filter((item) => item.correct.length >= Math.max(...item.options.map((text) => text.length))).length;
   assert.ok(longest < handWritten.length * 0.35, `the correct answer is the longest option in ${longest} of ${handWritten.length} questions`);
+});
+
+test("no Azure question repeats a prompt from anywhere in the bank", () => {
+  const prompts = [...nsePathways, ...azurePathways].flatMap((pathway) => pathway.modules.flatMap((module) => module.questions.map((question) => question.p)));
+  assert.equal(new Set(prompts).size, prompts.length);
 });

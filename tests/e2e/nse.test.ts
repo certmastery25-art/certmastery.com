@@ -142,28 +142,29 @@ test("existing quiz engine still works alongside NSE", async () => {
   assert.equal((await client.post(`/api/quizzes/${quiz.id}/complete`, {})).status, 200);
 });
 
-test("Azure: AZ-104 is published and the other exams stay hidden drafts", async () => {
+test("Azure: all four exams are published with objective-tagged questions, and none leak into Fortinet", async () => {
   const azure = await prisma.nsePathway.findMany({
     where: { programme: "AZURE" },
     orderBy: { level: "asc" },
     include: { modules: { include: { examObjectives: true } }, requires: { include: { requiredPathway: true } } },
   });
   assert.deepEqual(azure.map((pathway) => pathway.slug), ["az-900", "az-104", "az-700", "az-305"]);
-  assert.ok(azure.every((pathway) => (pathway.slug === "az-104") === (pathway.status === "PUBLISHED") && pathway.modules.every((module) => module.status === pathway.status)));
+  assert.ok(azure.every((pathway) => pathway.status === "PUBLISHED" && pathway.modules.every((module) => module.status === "PUBLISHED")));
   assert.ok(azure.every((pathway) => pathway.modules.every((module) => module.examObjectives.length >= 2 && module.weightMin && module.weightMax)));
   const az305 = azure.find((pathway) => pathway.slug === "az-305")!;
   assert.deepEqual(az305.requires.map((item) => [item.requiredPathway.slug, item.kind]), [["az-104", "REQUIRED"]]);
 
   const { client } = await user("azure");
-  for (const path of ["/fortinet/az-104", "/fortinet/az-900", "/azure/az-900", "/azure/az-305/infrastructure"]) assert.equal((await client.fetch(path)).status, 404, path);
+  for (const path of ["/fortinet/az-104", "/fortinet/az-900", "/azure/nse-4", "/azure/az-999"]) assert.equal((await client.fetch(path)).status, 404, path);
+  for (const path of ["/azure/az-900", "/azure/az-700/connectivity-services", "/azure/az-305/infrastructure"]) assert.equal((await client.fetch(path)).status, 200, path);
   for (const path of ["/fortinet", "/fortinet/dashboard"]) assert.doesNotMatch(await (await client.fetch(path)).text(), /AZ-104|Microsoft Azure Administrator/, path);
-  assert.equal((await client.post("/api/nse/exams", { pathway: "az-900", mode: "PRACTICE", count: 5 })).status, 404, "a draft pathway can't be examined");
 
   const landing = await (await client.fetch("/azure")).text();
   assert.match(landing, /Microsoft Azure certification practice/);
-  assert.match(landing, /In preparation/);
+  assert.doesNotMatch(landing, /In preparation/);
   for (const path of ["/certifications", "/practice", "/"]) assert.match(await (await client.fetch(path)).text(), /AZ-104/, path);
   const az104 = azure.find((pathway) => pathway.slug === "az-104")!;
+  assert.equal(await prisma.nseQuestion.count({ where: { module: { pathway: { programme: "AZURE" } }, OR: [{ objectiveId: null }, { status: { not: "PUBLISHED" } }] } }), 0, "every Azure question is published and linked to an objective");
   assert.match(await (await client.fetch("/azure/az-104")).text(), /Practise by exam domain/);
   for (const module of az104.modules) {
     const page = await client.fetch(`/azure/az-104/${module.slug}`);

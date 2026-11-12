@@ -124,3 +124,45 @@ export function rbacDrills(count: number, seed: number): SeedQuestion[] {
       options[answer], ...Object.entries(options).filter(([key]) => key !== answer).map(([, value]) => value));
   });
 }
+
+type AzureRoute = { prefix: string; bits: number; source: "User" | "Virtual network gateway" | "Default"; hop: string };
+const SOURCE_RANK = { User: 0, "Virtual network gateway": 1, Default: 2 } as const;
+
+/** Azure picks the longest matching prefix, then prefers user-defined routes over BGP routes over system routes. */
+export function azureRouteDrills(count: number, seed: number): SeedQuestion[] {
+  const random = generator(seed);
+  return Array.from({ length: count }, (_, index) => {
+    const third = random.int(1, 200);
+    const host = random.int(10, 240);
+    const destination = `10.20.${third}.${host}`;
+    const kind = index % 3;
+    const routes: AzureRoute[] = kind === 0
+      ? [
+        { prefix: `10.20.${third}.0/24`, bits: 24, source: "Virtual network gateway", hop: "Virtual network gateway" },
+        { prefix: "10.20.0.0/16", bits: 16, source: "User", hop: "Virtual appliance 10.0.9.4" },
+        { prefix: "0.0.0.0/0", bits: 0, source: "Default", hop: "Internet" },
+      ]
+      : kind === 1
+        ? [
+          { prefix: `10.20.${third}.0/24`, bits: 24, source: "Virtual network gateway", hop: "Virtual network gateway" },
+          { prefix: `10.20.${third}.0/24`, bits: 24, source: "User", hop: "Virtual appliance 10.0.9.4" },
+          { prefix: "0.0.0.0/0", bits: 0, source: "Default", hop: "Internet" },
+        ]
+        : [
+          { prefix: "10.20.0.0/16", bits: 16, source: "Default", hop: "Virtual network peering" },
+          { prefix: "0.0.0.0/0", bits: 0, source: "User", hop: "Virtual appliance 10.0.9.4" },
+          { prefix: "0.0.0.0/0", bits: 0, source: "Default", hop: "Internet" },
+        ];
+    const winner = [...routes].sort((a, b) => b.bits - a.bits || SOURCE_RANK[a.source] - SOURCE_RANK[b.source])[0];
+    const reason = kind === 0
+      ? "The longest matching prefix wins first, so the /24 learned over BGP beats the user-defined /16."
+      : kind === 1
+        ? "Both routes are /24. For the same prefix, a user-defined route beats a BGP route from the gateway."
+        : "The /16 system route for the peered network is the longest match, so the user-defined default route isn't used for this destination.";
+    const table = ["Source                    Address prefix        Next hop type", ...routes.map((route) => `${route.source.padEnd(25)} ${route.prefix.padEnd(21)} ${route.hop}`)].join("\n");
+    const whyWrong = (route: AzureRoute) => route.bits < winner.bits ? "Its prefix is shorter than the best match." : "For the same prefix, a user-defined route is preferred.";
+    const hops = [...new Set(routes.map((route) => route.hop))];
+    return withExhibit(q("ADVANCED", "Route selection", "Azure routing", `Route drill ${index + 1}: the effective routes for a VM's network interface are shown. Where does Azure send a packet to ${destination}?`, reason,
+      [winner.hop, reason], ...hops.filter((hop) => hop !== winner.hop).map((hop): [string, string] => [hop, whyWrong(routes.find((route) => route.hop === hop)!)]), ["The packet is dropped", "At least one route matches this destination."]), table);
+  });
+}

@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Microsoft Azure certification practice",
-  description: "Practise for Microsoft Azure certifications with original questions organised by Microsoft's exam domains, timed mock exams and readiness tracking. Starting with AZ-104: Microsoft Azure Administrator.",
+  description: "Practise for Microsoft Azure certifications with original questions organised by Microsoft's exam domains, timed mock exams and readiness tracking. From AZ-900 Fundamentals to AZ-305 Solutions Architect Expert.",
   alternates: { canonical: "/azure" },
 };
 
@@ -39,7 +39,7 @@ export default async function AzurePage() {
           <p className="eyebrow"><Cloud size={14} /> Microsoft Azure</p>
           <h1>Microsoft Azure certification practice</h1>
           <p className="nse-tagline">Practise against Microsoft&apos;s exam domains, one certification at a time.</p>
-          <p>Original practice questions organised by Microsoft&apos;s published skills outline, with an explanation for every option, timed mock exams and readiness tracking. We&apos;re starting with AZ-104: Microsoft Azure Administrator.</p>
+          <p>Original practice questions organised by Microsoft&apos;s published skills outline, with an explanation for every option, timed mock exams and readiness tracking, from AZ-900 Fundamentals to AZ-305 Solutions Architect Expert.</p>
           {first && <div className="result-actions"><Link className="button button-primary" href={`/azure/${first.slug}`}>Start {first.slug.toUpperCase()} <ArrowRight size={16} /></Link></div>}
         </div>
         <dl className="nse-hero-stats">
@@ -69,7 +69,7 @@ export default async function AzurePage() {
             return <li key={pathway.slug}>{pathway.status === "PUBLISHED" ? <Link href={`/azure/${pathway.slug}`}>{body}</Link> : <div className="nse-step-soon">{body}</div>}</li>;
           })}
         </ol>
-        <p className="nse-out-of-scope">Microsoft requires the Azure Administrator Associate certification (AZ-104) before it awards Azure Solutions Architect Expert (AZ-305). AZ-700 is an optional networking specialisation. Only AZ-104 has practice questions so far.</p>
+        <p className="nse-out-of-scope">Microsoft requires the Azure Administrator Associate certification (AZ-104) before it awards Azure Solutions Architect Expert (AZ-305). AZ-700 is an optional networking specialisation.</p>
       </section>
 
       <section className="nse-feature-row" aria-label="What's included">

@@ -2,11 +2,12 @@
 // 12 November 2026. Microsoft updates these outlines, so re-check SOURCES before changing them.
 import type { SeedModule, SeedPathway } from "../nse/types";
 import { az104Questions } from "./az104";
+import { az305Questions } from "./az305";
+import { az700Questions } from "./az700";
+import { az900Questions } from "./az900";
 
 const GUIDE = "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides";
 const CERT = "https://learn.microsoft.com/en-us/credentials/certifications";
-// Mock settings are CertMastery's own, set properly with the question banks in Phase 5.
-const MOCK: [number, number] = [40, 60];
 
 type Objective = NonNullable<SeedModule["examObjectives"]>[number];
 const objective = (slug: string, title: string, skills: string[]): Objective => ({ slug, title, skills });
@@ -37,10 +38,11 @@ const az900: SeedPathway = {
   objectives: ["Explain cloud models and service types", "Describe Azure's architecture and core services", "Describe identity, access and security in Azure", "Describe cost management, governance and monitoring"],
   officialExams: ["Exam AZ-900: Microsoft Azure Fundamentals"],
   officialUrl: `${CERT}/azure-fundamentals/`,
-  officialSpec: "A score of 700 or greater is required to pass. Domains: describe cloud concepts 25 to 30%, describe Azure architecture and services 35 to 40%, describe Azure management and governance 30 to 35%. Skills measured as of 20 July 2026. Checked 12 November 2026.",
+  officialSpec: "You have 45 minutes, and the exam may include interactive components. A score of 700 or greater is required to pass. Microsoft doesn't publish the number of questions. Domains: describe cloud concepts 25 to 30%, describe Azure architecture and services 35 to 40%, describe Azure management and governance 30 to 35%. Skills measured as of 20 July 2026. Checked 12 November 2026.",
   skillsAsOf: "2026-07-20",
-  status: "DRAFT",
-  mock: MOCK,
+  status: "PUBLISHED",
+  // 45 minutes is Microsoft's published exam time; 40 questions is CertMastery's choice.
+  mock: [40, 45],
   target: 300,
   modules: [
     domain("cloud-concepts", "Describe cloud concepts", "Cloud computing, its benefits and the service types.", [25, 30], "az-900", [
@@ -121,10 +123,11 @@ const az700: SeedPathway = {
   objectives: ["Design IP addressing, name resolution and routing", "Implement VPN, ExpressRoute and Virtual WAN", "Deliver applications with Load Balancer, Application Gateway and Front Door", "Provide private access with Private Link and service endpoints", "Secure networks with NSGs, Azure Firewall and WAF"],
   officialExams: ["Exam AZ-700: Designing and Implementing Microsoft Azure Networking Solutions"],
   officialUrl: `${CERT}/azure-network-engineer-associate/`,
-  officialSpec: "A score of 700 or greater is required to pass. Domains: design and implement core networking infrastructure 25 to 30%, design, implement, and manage connectivity services 20 to 25%, design and implement application delivery services 15 to 20%, design and implement private access to Azure services 10 to 15%, design and implement Azure network security services 15 to 20%. Skills measured as of 27 July 2026. Checked 12 November 2026.",
+  officialSpec: "You have 100 minutes, and the exam may include interactive components. A score of 700 or greater is required to pass. Microsoft doesn't publish the number of questions. Domains: design and implement core networking infrastructure 25 to 30%, design, implement, and manage connectivity services 20 to 25%, design and implement application delivery services 15 to 20%, design and implement private access to Azure services 10 to 15%, design and implement Azure network security services 15 to 20%. Skills measured as of 27 July 2026. Checked 12 November 2026.",
   skillsAsOf: "2026-07-27",
-  status: "DRAFT",
-  mock: MOCK,
+  status: "PUBLISHED",
+  // 100 minutes is Microsoft's published exam time; 50 questions is CertMastery's choice.
+  mock: [50, 100],
   target: 400,
   requires: [{ slug: "az-104", kind: "RECOMMENDED", note: "CertMastery's suggested order. Microsoft doesn't require AZ-104 for AZ-700." }],
   modules: [
@@ -168,10 +171,11 @@ const az305: SeedPathway = {
   objectives: ["Design logging, monitoring, identity and governance", "Design relational, semi-structured and unstructured data storage", "Design backup, disaster recovery and high availability", "Design compute, application architecture, migrations and networks"],
   officialExams: ["Exam AZ-305: Designing Microsoft Azure Infrastructure Solutions"],
   officialUrl: `${CERT}/azure-solutions-architect/`,
-  officialSpec: "Earns Microsoft Certified: Azure Solutions Architect Expert, which also requires the Azure Administrator Associate certification. A score of 700 or greater is required to pass. Domains: design identity, governance, and monitoring solutions 25 to 30%, design data storage solutions 20 to 25%, design business continuity solutions 15 to 20%, design infrastructure solutions 30 to 35%. Skills measured as of 17 April 2026. Checked 12 November 2026.",
+  officialSpec: "Earns Microsoft Certified: Azure Solutions Architect Expert, which also requires the Azure Administrator Associate certification. A score of 700 or greater is required to pass. Microsoft's exam pages we checked don't state the duration or number of questions. Domains: design identity, governance, and monitoring solutions 25 to 30%, design data storage solutions 20 to 25%, design business continuity solutions 15 to 20%, design infrastructure solutions 30 to 35%. Skills measured as of 17 April 2026. Checked 12 November 2026.",
   skillsAsOf: "2026-04-17",
-  status: "DRAFT",
-  mock: MOCK,
+  status: "PUBLISHED",
+  // CertMastery's own settings: Microsoft's pages we checked don't state AZ-305's duration.
+  mock: [50, 100],
   target: 500,
   requires: [{ slug: "az-104", kind: "REQUIRED", note: "Microsoft requires the Azure Administrator Associate certification for Azure Solutions Architect Expert." }],
   modules: [
@@ -199,6 +203,8 @@ const az305: SeedPathway = {
 };
 
 // Questions are appended to each domain, because a question's seed key comes from its position.
-az104.modules = az104.modules.map((module) => ({ ...module, questions: az104Questions[module.slug] ?? [] }));
+for (const [pathway, bank] of [[az900, az900Questions], [az104, az104Questions], [az700, az700Questions], [az305, az305Questions]] as const) {
+  pathway.modules = pathway.modules.map((module) => ({ ...module, questions: bank[module.slug] ?? [] }));
+}
 
 export const azurePathways: SeedPathway[] = [az900, az104, az700, az305];
