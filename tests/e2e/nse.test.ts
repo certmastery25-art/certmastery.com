@@ -85,7 +85,9 @@ before(async () => {
   assert.equal(new URL(process.env.DATABASE_URL!).hostname, "db.localtest.me", "refusing to run against a non-local database");
   ({ prisma } = await import("../../src/lib/prisma"));
   assert.ok(await prisma.nseQuestion.count() > 100, "run npm run db:seed-nse locally first");
-  server = spawn("npx", ["next", "dev", "-p", String(PORT)], { env: process.env, shell: true, stdio: "ignore" });
+  // E2E_SERVER=start runs against a production build (run `next build` first), as on Render.
+  const mode = process.env.E2E_SERVER === "start" ? "start" : "dev";
+  server = spawn("npx", ["next", mode, "-p", String(PORT)], { env: process.env, shell: true, stdio: "ignore" });
   for (let attempt = 0; attempt < 120; attempt += 1) {
     const up = await fetch(`${BASE}/api/auth/csrf`).then((response) => response.ok).catch(() => false);
     if (up) return;
